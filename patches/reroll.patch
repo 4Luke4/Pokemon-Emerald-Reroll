@@ -1,0 +1,1303 @@
+diff --git a/asm/macros/event.inc b/asm/macros/event.inc
+index 89e7e50a58ee638ed7981581b9dc922543b7974e..578206ee5c1e5aac8caae389d1e25454af0b2deb 100644
+--- a/asm/macros/event.inc
++++ b/asm/macros/event.inc
+@@ -1945,6 +1945,7 @@
+ 	.macro giveitem item:req, amount=1
+ 	setorcopyvar VAR_0x8000, \item
+ 	setorcopyvar VAR_0x8001, \amount
++	special Reroll_ReplaceBallGift
+ 	callstd STD_OBTAIN_ITEM
+ 	.endm
+ 
+@@ -1953,6 +1954,7 @@
+ 	.macro finditem item:req, amount=1
+ 	setorcopyvar VAR_0x8000, \item
+ 	setorcopyvar VAR_0x8001, \amount
++	special Reroll_RandomizePickup
+ 	callstd STD_FIND_ITEM
+ 	.endm
+ 
+diff --git a/data/scripts/field_move_scripts.inc b/data/scripts/field_move_scripts.inc
+index 3e99fc08e2d4ffaeb0395ee9d49e21894a74fe1d..c5d8ed26d87e81265f7707907ec7fda5beae16fa 100644
+--- a/data/scripts/field_move_scripts.inc
++++ b/data/scripts/field_move_scripts.inc
+@@ -7,8 +7,6 @@ EventScript_CutTree::
+ 	setfieldeffectargument 0, VAR_RESULT
+ 	bufferpartymonnick STR_VAR_1, VAR_RESULT
+ 	buffermovename STR_VAR_2, MOVE_CUT
+-	msgbox Text_WantToCut, MSGBOX_YESNO
+-	goto_if_eq VAR_RESULT, NO, EventScript_CancelCut
+ 	msgbox Text_MonUsedFieldMove, MSGBOX_DEFAULT
+ 	closemessage
+ 	dofieldeffect FLDEFF_USE_CUT_ON_TREE
+@@ -66,8 +64,6 @@ EventScript_RockSmash::
+ 	setfieldeffectargument 0, VAR_RESULT
+ 	bufferpartymonnick STR_VAR_1, VAR_RESULT
+ 	buffermovename STR_VAR_2, MOVE_ROCK_SMASH
+-	msgbox Text_WantToSmash, MSGBOX_YESNO
+-	goto_if_eq VAR_RESULT, NO, EventScript_CancelSmash
+ 	msgbox Text_MonUsedFieldMove, MSGBOX_DEFAULT
+ 	closemessage
+ 	dofieldeffect FLDEFF_USE_ROCK_SMASH
+@@ -128,8 +124,6 @@ EventScript_StrengthBoulder::
+ 	checkpartymove MOVE_STRENGTH
+ 	goto_if_eq VAR_RESULT, PARTY_SIZE, EventScript_CantStrength
+ 	setfieldeffectargument 0, VAR_RESULT
+-	msgbox Text_WantToStrength, MSGBOX_YESNO
+-	goto_if_eq VAR_RESULT, NO, EventScript_CancelStrength
+ 	closemessage
+ 	dofieldeffect FLDEFF_USE_STRENGTH
+ 	waitstate
+@@ -188,8 +182,6 @@ EventScript_UseWaterfall::
+ 	goto_if_eq VAR_RESULT, PARTY_SIZE, EventScript_CantWaterfall
+ 	bufferpartymonnick STR_VAR_1, VAR_RESULT
+ 	setfieldeffectargument 0, VAR_RESULT
+-	msgbox Text_WantToWaterfall, MSGBOX_YESNO
+-	goto_if_eq VAR_RESULT, NO, EventScript_EndWaterfall
+ 	msgbox Text_MonUsedWaterfall, MSGBOX_DEFAULT
+ 	dofieldeffect FLDEFF_USE_WATERFALL
+ 	goto EventScript_EndWaterfall
+@@ -222,8 +214,6 @@ EventScript_UseDive::
+ 	bufferpartymonnick STR_VAR_1, VAR_RESULT
+ 	setfieldeffectargument 0, VAR_RESULT
+ 	setfieldeffectargument 1, 1
+-	msgbox Text_WantToDive, MSGBOX_YESNO
+-	goto_if_eq VAR_RESULT, NO, EventScript_EndDive
+ 	msgbox Text_MonUsedDive, MSGBOX_DEFAULT
+ 	dofieldeffect FLDEFF_USE_DIVE
+ 	goto EventScript_EndDive
+@@ -245,8 +235,6 @@ EventScript_UseDiveUnderwater::
+ 	bufferpartymonnick STR_VAR_1, VAR_RESULT
+ 	setfieldeffectargument 0, VAR_RESULT
+ 	setfieldeffectargument 1, 1
+-	msgbox Text_WantToSurface, MSGBOX_YESNO
+-	goto_if_eq VAR_RESULT, NO, EventScript_EndSurface
+ 	msgbox Text_MonUsedDive, MSGBOX_DEFAULT
+ 	dofieldeffect FLDEFF_USE_DIVE
+ 	goto EventScript_EndSurface
+diff --git a/data/scripts/repel.inc b/data/scripts/repel.inc
+index fc178603c0e8d71f52369356192ab9db5cd3f0dd..6c29a135a23f40c496ec77128491da92c86307c9 100644
+--- a/data/scripts/repel.inc
++++ b/data/scripts/repel.inc
+@@ -1,6 +1,18 @@
+ EventScript_RepelWoreOff::
++	special Reroll_HasSpareRepel
++	goto_if_eq VAR_RESULT, FALSE, EventScript_RepelWoreOffNoSpare
++	msgbox Text_RepelWoreOffUseAnother, MSGBOX_YESNO
++	goto_if_eq VAR_RESULT, NO, EventScript_RepelWoreOffEnd
++	special Reroll_UseSpareRepel
++	goto EventScript_RepelWoreOffEnd
++EventScript_RepelWoreOffNoSpare::
+ 	msgbox Text_RepelWoreOff, MSGBOX_SIGN
++EventScript_RepelWoreOffEnd::
+ 	end
+ 
+ Text_RepelWoreOff:
+ 	.string "REPEL's effect wore off…$"
++
++Text_RepelWoreOffUseAnother:
++	.string "REPEL's effect wore off…\p"
++	.string "Use another REPEL?$"
+diff --git a/data/scripts/surf.inc b/data/scripts/surf.inc
+index edb116f991edef3bd58ccc489b25fa44acb32425..d022b6aa2309331a254a67bc18b8498a937dde8e 100644
+--- a/data/scripts/surf.inc
++++ b/data/scripts/surf.inc
+@@ -4,8 +4,6 @@ EventScript_UseSurf::
+ 	bufferpartymonnick STR_VAR_1, VAR_RESULT
+ 	setfieldeffectargument 0, VAR_RESULT
+ 	lockall
+-	msgbox gText_WantToUseSurf, MSGBOX_YESNO
+-	goto_if_eq VAR_RESULT, NO, EventScript_ReleaseUseSurf
+ 	msgbox gText_PlayerUsedSurf, MSGBOX_DEFAULT
+ 	dofieldeffect FLDEFF_USE_SURF
+ EventScript_ReleaseUseSurf::
+diff --git a/data/specials.inc b/data/specials.inc
+index 34f27bfcfde2f283d3cbe8df4493196347238457..31ff3acebd9f50c335f97498471922f6c7ab7d9c 100644
+--- a/data/specials.inc
++++ b/data/specials.inc
+@@ -540,3 +540,7 @@ gSpecials::
+ 	def_special RemoveRecordsWindow
+ 	def_special CloseDeptStoreElevatorWindow
+ 	def_special TrySetBattleTowerLinkType
++	def_special Reroll_RandomizePickup
++	def_special Reroll_ReplaceBallGift
++	def_special Reroll_HasSpareRepel
++	def_special Reroll_UseSpareRepel
+diff --git a/include/reroll.h b/include/reroll.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..631f1dc6861eff75e3cd3e8f33ad4d2ac7746ec5
+--- /dev/null
++++ b/include/reroll.h
+@@ -0,0 +1,33 @@
++#ifndef GUARD_REROLL_H
++#define GUARD_REROLL_H
++
++#include "global.h"
++
++struct Pokemon;
++
++// Initializes the challenge RNG and enforces all global challenge invariants.
++void Reroll_EnsurePlayerParty(void);
++
++// Builds a legal randomized party while retaining the source trainer's levels.
++u8 Reroll_CreateTrainerParty(struct Pokemon *party, u16 trainerId, bool8 firstTrainer);
++
++// Applies progression changes after a completed battle.
++void Reroll_OnBattleEnd(void);
++
++// Returns challenge-mode AI policy for the requested trainer.
++u32 Reroll_GetTrainerAiFlags(u16 trainerId);
++u16 Reroll_GetTrainerItem(u16 trainerId, u8 itemSlot);
++
++// Event-script specials used by randomized pickups and modern Repel behavior.
++void Reroll_RandomizePickup(void);
++void Reroll_ReplaceBallGift(void);
++void Reroll_HasSpareRepel(void);
++void Reroll_UseSpareRepel(void);
++
++// Maintains the lead party member's overworld icon follower.
++void Reroll_UpdateFollower(void);
++
++// Irreversibly clears the failed run and returns to the title boot sequence.
++void Reroll_GameOver(void);
++
++#endif // GUARD_REROLL_H
+diff --git a/src/battle_ai_script_commands.c b/src/battle_ai_script_commands.c
+index 5cb0a60a6d6cdccf7f6278981a929e5f5ea84c5c..7e4397abfde6fedc85e18d3f0db1c55fbaffb6c4 100644
+--- a/src/battle_ai_script_commands.c
++++ b/src/battle_ai_script_commands.c
+@@ -9,6 +9,7 @@
+ #include "pokemon.h"
+ #include "random.h"
+ #include "recorded_battle.h"
++#include "reroll.h"
+ #include "util.h"
+ #include "constants/abilities.h"
+ #include "constants/battle_ai.h"
+@@ -298,9 +299,11 @@ void BattleAI_HandleItemUseBeforeAISetup(u8 defaultScoreMoves)
+     {
+         for (i = 0; i < MAX_TRAINER_ITEMS; i++)
+         {
+-            if (gTrainers[gTrainerBattleOpponent_A].items[i] != ITEM_NONE)
++            u16 item = Reroll_GetTrainerItem(gTrainerBattleOpponent_A, i);
++
++            if (item != ITEM_NONE)
+             {
+-                BATTLE_HISTORY->trainerItems[BATTLE_HISTORY->itemsNo] = gTrainers[gTrainerBattleOpponent_A].items[i];
++                BATTLE_HISTORY->trainerItems[BATTLE_HISTORY->itemsNo] = item;
+                 BATTLE_HISTORY->itemsNo++;
+             }
+         }
+@@ -371,9 +374,10 @@ void BattleAI_SetupAIData(u8 defaultScoreMoves)
+     else if (gBattleTypeFlags & (BATTLE_TYPE_FRONTIER | BATTLE_TYPE_EREADER_TRAINER | BATTLE_TYPE_TRAINER_HILL | BATTLE_TYPE_SECRET_BASE))
+         AI_THINKING_STRUCT->aiFlags = AI_SCRIPT_CHECK_BAD_MOVE | AI_SCRIPT_CHECK_VIABILITY | AI_SCRIPT_TRY_TO_FAINT;
+     else if (gBattleTypeFlags & BATTLE_TYPE_TWO_OPPONENTS)
+-        AI_THINKING_STRUCT->aiFlags = gTrainers[gTrainerBattleOpponent_A].aiFlags | gTrainers[gTrainerBattleOpponent_B].aiFlags;
++        AI_THINKING_STRUCT->aiFlags = Reroll_GetTrainerAiFlags(gTrainerBattleOpponent_A)
++                                    | Reroll_GetTrainerAiFlags(gTrainerBattleOpponent_B);
+     else
+-       AI_THINKING_STRUCT->aiFlags = gTrainers[gTrainerBattleOpponent_A].aiFlags;
++       AI_THINKING_STRUCT->aiFlags = Reroll_GetTrainerAiFlags(gTrainerBattleOpponent_A);
+ 
+     if (gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
+         AI_THINKING_STRUCT->aiFlags |= AI_SCRIPT_DOUBLE_BATTLE; // act smart in doubles and don't attack your partner
+diff --git a/src/battle_main.c b/src/battle_main.c
+index 11fc168603f80a099134bc30e363dcc4c143d696..a761cdf5e2b9e6251768a789df861a79111390b6 100644
+--- a/src/battle_main.c
++++ b/src/battle_main.c
+@@ -36,6 +36,7 @@
+ #include "pokemon.h"
+ #include "random.h"
+ #include "recorded_battle.h"
++#include "reroll.h"
+ #include "roamer.h"
+ #include "safari_zone.h"
+ #include "scanline_effect.h"
+@@ -694,6 +695,8 @@ static void CB2_InitBattleInternal(void)
+ 
+     if (!(gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED)))
+     {
++        if (!(gBattleTypeFlags & BATTLE_TYPE_WALLY_TUTORIAL))
++            Reroll_EnsurePlayerParty();
+         CreateNPCTrainerParty(&gEnemyParty[0], gTrainerBattleOpponent_A, TRUE);
+         if (gBattleTypeFlags & BATTLE_TYPE_TWO_OPPONENTS)
+             CreateNPCTrainerParty(&gEnemyParty[PARTY_SIZE / 2], gTrainerBattleOpponent_B, FALSE);
+@@ -1965,6 +1968,12 @@ static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 fir
+     s32 i, j;
+     u8 monsCount;
+ 
++    // Ordinary story trainers are generated by the isolated Reroll engine.
++    if (trainerNum != TRAINER_SECRET_BASE
++     && gBattleTypeFlags & BATTLE_TYPE_TRAINER
++     && !(gBattleTypeFlags & (BATTLE_TYPE_FRONTIER | BATTLE_TYPE_EREADER_TRAINER | BATTLE_TYPE_TRAINER_HILL)))
++        return Reroll_CreateTrainerParty(party, trainerNum, firstTrainer);
++
+     if (trainerNum == TRAINER_SECRET_BASE)
+         return 0;
+ 
+@@ -5216,6 +5225,8 @@ static void WaitForEvoSceneToFinish(void)
+ 
+ static void ReturnFromBattleToOverworld(void)
+ {
++    Reroll_OnBattleEnd();
++
+     if (!(gBattleTypeFlags & BATTLE_TYPE_LINK))
+     {
+         RandomlyGivePartyPokerus(gPlayerParty);
+diff --git a/src/battle_script_commands.c b/src/battle_script_commands.c
+index 3af09ec7a281b99508f5e0170bb15f535d11df47..150bbaf3f79c2e3f85d041d50bed1058ba38fb88 100644
+--- a/src/battle_script_commands.c
++++ b/src/battle_script_commands.c
+@@ -3261,6 +3261,8 @@ static void Cmd_getexp(void)
+     s32 viaExpShare = 0;
+     u16 *exp = &gBattleStruct->expValue;
+ 
++    // Challenge parties are level-locked: skip experience and EV distribution.
++    gBattleScripting.getexpState = 6;
+     gBattlerFainted = GetBattlerForBattleScript(gBattlescriptCurrInstr[1]);
+     sentIn = gSentPokesToOpponent[(gBattlerFainted & 2) >> 1];
+ 
+diff --git a/src/bike.c b/src/bike.c
+index d8a3d1ab5221149327c2e8bbf963f0229c96eaa4..0651f3384760794cb410d2e5a7a1a5a0049cfcd4 100644
+--- a/src/bike.c
++++ b/src/bike.c
+@@ -1055,7 +1055,8 @@ void Bike_HandleBumpySlopeJump(void)
+ 
+ bool32 IsRunningDisallowed(u8 metatile)
+ {
+-    if (!gMapHeader.allowRunning || IsRunningDisallowedByMetatile(metatile) == TRUE)
++    // Indoor map headers no longer suppress running; tile safety still applies.
++    if (IsRunningDisallowedByMetatile(metatile) == TRUE)
+         return TRUE;
+     else
+         return FALSE;
+diff --git a/src/field_player_avatar.c b/src/field_player_avatar.c
+index 5b22ff74c38fefbc3606945ac7f35f3bec303b3c..d522617ca6f10b4e2bfeeefe445acb94c612f075 100644
+--- a/src/field_player_avatar.c
++++ b/src/field_player_avatar.c
+@@ -1300,6 +1300,9 @@ bool8 PartyHasMonWithSurf(void)
+ 
+     if (!TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING))
+     {
++        // The lead Pokémon performs virtual HMs after the appropriate badge.
++        if (GetMonData(&gPlayerParty[0], MON_DATA_SPECIES) != SPECIES_NONE)
++            return TRUE;
+         for (i = 0; i < PARTY_SIZE; i++)
+         {
+             if (GetMonData(&gPlayerParty[i], MON_DATA_SPECIES) == SPECIES_NONE)
+diff --git a/src/item.c b/src/item.c
+index a3095c32d7a34caed28011b142c247914807d908..034cfdb67c90606a096bdc9572c9f41c761ed9b3 100644
+--- a/src/item.c
++++ b/src/item.c
+@@ -131,6 +131,8 @@ bool8 CheckBagHasItem(u16 itemId, u16 count)
+     u8 i;
+     u8 pocket;
+ 
++    if (itemId >= FIRST_BALL && itemId <= LAST_BALL)
++        return FALSE;
+     if (GetItemPocket(itemId) == 0)
+         return FALSE;
+     if (CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE || FlagGet(FLAG_STORING_ITEMS_IN_PYRAMID_BAG) == TRUE)
+@@ -178,6 +180,8 @@ bool8 CheckBagHasSpace(u16 itemId, u16 count)
+     u16 slotCapacity;
+     u16 ownedCount;
+ 
++    if (itemId >= FIRST_BALL && itemId <= LAST_BALL)
++        return FALSE;
+     if (GetItemPocket(itemId) == POCKET_NONE)
+         return FALSE;
+ 
+@@ -239,6 +243,8 @@ bool8 AddBagItem(u16 itemId, u16 count)
+ {
+     u8 i;
+ 
++    if (itemId >= FIRST_BALL && itemId <= LAST_BALL)
++        return FALSE;
+     if (GetItemPocket(itemId) == POCKET_NONE)
+         return FALSE;
+ 
+diff --git a/src/new_game.c b/src/new_game.c
+index 80746561b03bc467f4554bfb988cdd3b889457d3..82d23b0563b81d0ec9aa8b8e0ed33c4443f44bf0 100644
+--- a/src/new_game.c
++++ b/src/new_game.c
+@@ -93,7 +93,8 @@ static void SetDefaultOptions(void)
+     gSaveBlock2Ptr->optionsTextSpeed = OPTIONS_TEXT_SPEED_MID;
+     gSaveBlock2Ptr->optionsWindowFrameType = 0;
+     gSaveBlock2Ptr->optionsSound = OPTIONS_SOUND_MONO;
+-    gSaveBlock2Ptr->optionsBattleStyle = OPTIONS_BATTLE_STYLE_SHIFT;
++    // Reroll is a true Set-mode challenge from the first frame of a new run.
++    gSaveBlock2Ptr->optionsBattleStyle = OPTIONS_BATTLE_STYLE_SET;
+     gSaveBlock2Ptr->optionsBattleSceneOff = FALSE;
+     gSaveBlock2Ptr->regionMapZoom = FALSE;
+ }
+diff --git a/src/option_menu.c b/src/option_menu.c
+index 1b1d1c10a3ef756c79f5053d8c6611ef5ae31d8b..4856f7c27b0e0d4952576c15c33426ce115ef2ad 100644
+--- a/src/option_menu.c
++++ b/src/option_menu.c
+@@ -466,13 +466,9 @@ static void BattleScene_DrawChoices(u8 selection)
+ 
+ static u8 BattleStyle_ProcessInput(u8 selection)
+ {
+-    if (JOY_NEW(DPAD_LEFT | DPAD_RIGHT))
+-    {
+-        selection ^= 1;
+-        sArrowPressed = TRUE;
+-    }
+-
+-    return selection;
++    (void)selection;
++    // Reroll is a true Set-mode challenge; Shift can never be selected.
++    return OPTIONS_BATTLE_STYLE_SET;
+ }
+ 
+ static void BattleStyle_DrawChoices(u8 selection)
+diff --git a/src/overworld.c b/src/overworld.c
+index 1d6b81c1f6428cd9a31f4349a93c2207db71f1f3..307f5ccb0a1b45afb5a45bb706c105236e14f572 100644
+--- a/src/overworld.c
++++ b/src/overworld.c
+@@ -41,6 +41,7 @@
+ #include "play_time.h"
+ #include "random.h"
+ #include "roamer.h"
++#include "reroll.h"
+ #include "rotating_gate.h"
+ #include "safari_zone.h"
+ #include "save.h"
+@@ -1466,6 +1467,9 @@ static void OverworldBasic(void)
+ {
+     ScriptContext_RunScript();
+     RunTasks();
++    if (gPlayerPartyCount != 0 && gPlayerPartyCount != PARTY_SIZE)
++        Reroll_EnsurePlayerParty();
++    Reroll_UpdateFollower();
+     AnimateSprites();
+     CameraUpdate();
+     UpdateCameraPanning();
+@@ -1549,24 +1553,8 @@ void CB2_NewGame(void)
+ 
+ void CB2_WhiteOut(void)
+ {
+-    u8 state;
+-
+     if (++gMain.state >= 120)
+-    {
+-        FieldClearVBlankHBlankCallbacks();
+-        StopMapMusic();
+-        ResetSafariZoneFlag_();
+-        DoWhiteOut();
+-        ResetInitialPlayerAvatarState();
+-        ScriptContext_Init();
+-        UnlockPlayerFieldControls();
+-        gFieldCallback = FieldCB_WarpExitFadeFromBlack;
+-        state = 0;
+-        DoMapLoadLoop(&state);
+-        SetFieldVBlankCallback();
+-        SetMainCallback1(CB1_Overworld);
+-        SetMainCallback2(CB2_Overworld);
+-    }
++        Reroll_GameOver();
+ }
+ 
+ void CB2_LoadMap(void)
+diff --git a/src/pokemon.c b/src/pokemon.c
+index df5ab2fb441b0682038e0600eab0f992efbe072c..8db8e83de2f31f0a89d6f8881b80d9454c373e75 100644
+--- a/src/pokemon.c
++++ b/src/pokemon.c
+@@ -4771,6 +4771,10 @@ bool8 PokemonUseItemEffects(struct Pokemon *mon, u16 item, u8 partyIndex, u8 mov
+     s8 evChange;
+     u16 evCount;
+ 
++    // Level assignment is owned exclusively by progression rerolls.
++    if (item == ITEM_RARE_CANDY)
++        return TRUE;
++
+     // Get item hold effect
+     heldItem = GetMonData(mon, MON_DATA_HELD_ITEM, NULL);
+     if (heldItem == ITEM_ENIGMA_BERRY)
+@@ -4917,14 +4921,7 @@ bool8 PokemonUseItemEffects(struct Pokemon *mon, u16 item, u8 partyIndex, u8 mov
+             }
+ 
+             // Rare Candy
+-            if ((itemEffect[i] & ITEM3_LEVEL_UP)
+-             && GetMonData(mon, MON_DATA_LEVEL, NULL) != MAX_LEVEL)
+-            {
+-                dataUnsigned = gExperienceTables[gSpeciesInfo[GetMonData(mon, MON_DATA_SPECIES, NULL)].growthRate][GetMonData(mon, MON_DATA_LEVEL, NULL) + 1];
+-                SetMonData(mon, MON_DATA_EXP, &dataUnsigned);
+-                CalculateMonStats(mon);
+-                retVal = FALSE;
+-            }
++            // Reroll parties are progression-locked; Rare Candy has no effect.
+ 
+             // Cure status
+             if ((itemEffect[i] & ITEM3_SLEEP)
+diff --git a/src/reroll.c b/src/reroll.c
+new file mode 100644
+index 0000000000000000000000000000000000000000..9d14e009825a914aefde9ec6e9b87f3cc9835418
+--- /dev/null
++++ b/src/reroll.c
+@@ -0,0 +1,799 @@
++#include "global.h"
++#include "battle.h"
++#include "battle_setup.h"
++#include "data.h"
++#include "event_data.h"
++#include "item.h"
++#include "main.h"
++#include "party_menu.h"
++#include "pokemon.h"
++#include "pokemon_icon.h"
++#include "random.h"
++#include "reroll.h"
++#include "save.h"
++#include "sprite.h"
++#include "constants/abilities.h"
++#include "constants/battle.h"
++#include "constants/battle_ai.h"
++#include "constants/daycare.h"
++#include "constants/flags.h"
++#include "constants/items.h"
++#include "constants/moves.h"
++#include "constants/opponents.h"
++#include "constants/pokemon.h"
++#include "constants/trainers.h"
++#include "constants/vars.h"
++
++#define REROLL_CHACHA_ROUNDS 20
++#define REROLL_MOVE_POOL_CAPACITY 96
++#define REROLL_EGG_MOVE_SPECIES_OFFSET 20000
++#define REROLL_EGG_MOVE_TERMINATOR 0xFFFF
++
++extern const struct Evolution gEvolutionTable[][EVOS_PER_MON];
++extern const u16 gEggMoves[];
++
++struct RerollRngState
++{
++    u32 input[16];
++    u32 output[16];
++    u8 outputIndex;
++    bool8 initialized;
++};
++
++static EWRAM_DATA struct RerollRngState sRerollRng = {0};
++static EWRAM_DATA u8 sFollowerSpriteId = MAX_SPRITES;
++static EWRAM_DATA u16 sFollowerSpecies = SPECIES_NONE;
++
++static const u16 sProgressionBosses[] =
++{
++    TRAINER_ROXANNE_1,
++    TRAINER_BRAWLY_1,
++    TRAINER_WATTSON_1,
++    TRAINER_FLANNERY_1,
++    TRAINER_NORMAN_1,
++    TRAINER_WINONA_1,
++    TRAINER_TATE_AND_LIZA_1,
++    TRAINER_JUAN_1,
++    TRAINER_SIDNEY,
++    TRAINER_PHOEBE,
++    TRAINER_GLACIA,
++    TRAINER_DRAKE,
++    TRAINER_WALLACE,
++};
++
++static const u16 sUsefulHeldItems[] =
++{
++    ITEM_LEFTOVERS,
++    ITEM_LUM_BERRY,
++    ITEM_SITRUS_BERRY,
++    ITEM_SHELL_BELL,
++    ITEM_BRIGHT_POWDER,
++    ITEM_QUICK_CLAW,
++    ITEM_FOCUS_BAND,
++};
++
++static const u16 sPickupItems[] =
++{
++    ITEM_POTION,
++    ITEM_SUPER_POTION,
++    ITEM_HYPER_POTION,
++    ITEM_MAX_POTION,
++    ITEM_FULL_RESTORE,
++    ITEM_FULL_HEAL,
++    ITEM_REVIVE,
++    ITEM_MAX_REVIVE,
++    ITEM_ETHER,
++    ITEM_MAX_ETHER,
++    ITEM_ELIXIR,
++    ITEM_MAX_ELIXIR,
++    ITEM_GUARD_SPEC,
++    ITEM_DIRE_HIT,
++    ITEM_X_ATTACK,
++    ITEM_X_DEFEND,
++    ITEM_X_SPEED,
++    ITEM_X_ACCURACY,
++    ITEM_X_SPECIAL,
++    ITEM_LUM_BERRY,
++    ITEM_SITRUS_BERRY,
++    ITEM_LEFTOVERS,
++    ITEM_SHELL_BELL,
++};
++
++static const u16 sImportantTrainerItems[MAX_TRAINER_ITEMS] =
++{
++    ITEM_FULL_RESTORE,
++    ITEM_MAX_POTION,
++    ITEM_FULL_HEAL,
++    ITEM_GUARD_SPEC,
++};
++
++static u32 RotateLeft(u32 value, u8 shift)
++{
++    return (value << shift) | (value >> (32 - shift));
++}
++
++#define CHACHA_QUARTER_ROUND(a, b, c, d) \
++    do                                      \
++    {                                       \
++        (a) += (b);                         \
++        (d) ^= (a);                         \
++        (d) = RotateLeft((d), 16);          \
++        (c) += (d);                         \
++        (b) ^= (c);                         \
++        (b) = RotateLeft((b), 12);          \
++        (a) += (b);                         \
++        (d) ^= (a);                         \
++        (d) = RotateLeft((d), 8);           \
++        (c) += (d);                         \
++        (b) ^= (c);                         \
++        (b) = RotateLeft((b), 7);           \
++    } while (0)
++
++static u32 MixEntropyWord(u32 value)
++{
++    // MurmurHash3's finalizer diffuses low-entropy hardware timing samples.
++    value ^= value >> 16;
++    value *= 0x85EBCA6B;
++    value ^= value >> 13;
++    value *= 0xC2B2AE35;
++    value ^= value >> 16;
++    return value;
++}
++
++static void RefillRandomBlock(void)
++{
++    u32 working[16];
++    u8 i;
++
++    for (i = 0; i < ARRAY_COUNT(working); i++)
++        working[i] = sRerollRng.input[i];
++
++    for (i = 0; i < REROLL_CHACHA_ROUNDS; i += 2)
++    {
++        CHACHA_QUARTER_ROUND(working[0], working[4], working[8], working[12]);
++        CHACHA_QUARTER_ROUND(working[1], working[5], working[9], working[13]);
++        CHACHA_QUARTER_ROUND(working[2], working[6], working[10], working[14]);
++        CHACHA_QUARTER_ROUND(working[3], working[7], working[11], working[15]);
++        CHACHA_QUARTER_ROUND(working[0], working[5], working[10], working[15]);
++        CHACHA_QUARTER_ROUND(working[1], working[6], working[11], working[12]);
++        CHACHA_QUARTER_ROUND(working[2], working[7], working[8], working[13]);
++        CHACHA_QUARTER_ROUND(working[3], working[4], working[9], working[14]);
++    }
++
++    for (i = 0; i < ARRAY_COUNT(working); i++)
++        sRerollRng.output[i] = working[i] + sRerollRng.input[i];
++
++    // Words 12 and 13 form a 64-bit block counter.
++    if (++sRerollRng.input[12] == 0)
++        sRerollRng.input[13]++;
++    sRerollRng.outputIndex = 0;
++}
++
++static void InitializeRandom(void)
++{
++    u32 entropy;
++    u8 i;
++
++    if (sRerollRng.initialized)
++        return;
++
++    // Human input timing, scanline timing, the vanilla RNG, and save identity are
++    // combined. ChaCha20 provides a strong stream, while the GBA's lack of a
++    // hardware entropy source is explicitly documented as a platform limitation.
++    entropy = Random32();
++    entropy ^= (u32)REG_VCOUNT << 24;
++    entropy ^= gMain.vblankCounter1;
++    entropy ^= gMain.vblankCounter2 << 16;
++    entropy ^= T1_READ_32(gSaveBlock2Ptr->playerTrainerId);
++    entropy ^= gSaveBlock2Ptr->playTimeVBlanks << 8;
++    entropy ^= gSaveBlock2Ptr->playTimeSeconds << 16;
++    entropy ^= gSaveBlock2Ptr->playTimeMinutes << 24;
++
++    sRerollRng.input[0] = 0x61707865;
++    sRerollRng.input[1] = 0x3320646E;
++    sRerollRng.input[2] = 0x79622D32;
++    sRerollRng.input[3] = 0x6B206574;
++    for (i = 4; i < 12; i++)
++    {
++        entropy = MixEntropyWord(entropy + 0x9E3779B9 + i);
++        sRerollRng.input[i] = entropy;
++    }
++    sRerollRng.input[12] = 0;
++    sRerollRng.input[13] = 0;
++    sRerollRng.input[14] = MixEntropyWord(entropy ^ Random32());
++    sRerollRng.input[15] = MixEntropyWord(entropy ^ gMain.vblankCounter1);
++    sRerollRng.outputIndex = ARRAY_COUNT(sRerollRng.output);
++    sRerollRng.initialized = TRUE;
++}
++
++static u32 StrongRandom(void)
++{
++    InitializeRandom();
++    if (sRerollRng.outputIndex >= ARRAY_COUNT(sRerollRng.output))
++        RefillRandomBlock();
++    return sRerollRng.output[sRerollRng.outputIndex++];
++}
++
++static u32 StrongRandomRange(u32 upperBound)
++{
++    u32 value;
++    u32 limit;
++
++    if (upperBound <= 1)
++        return 0;
++
++    // Rejection sampling prevents modulo bias for every non-power-of-two range.
++    limit = UINT32_MAX - (UINT32_MAX % upperBound);
++    do
++        value = StrongRandom();
++    while (value >= limit);
++    return value % upperBound;
++}
++
++static bool8 IsFinalEvolution(u16 species)
++{
++    u8 i;
++
++    for (i = 0; i < EVOS_PER_MON; i++)
++    {
++        if (gEvolutionTable[species][i].method != 0)
++            return FALSE;
++    }
++    return TRUE;
++}
++
++static bool8 IsEligibleSpecies(u16 species, u8 level)
++{
++    if (species == SPECIES_NONE || species >= NUM_SPECIES)
++        return FALSE;
++    if (gSpeciesInfo[species].baseHP == 0)
++        return FALSE;
++    if (level > 50 && !IsFinalEvolution(species))
++        return FALSE;
++    return TRUE;
++}
++
++static u16 ChooseSpecies(u8 level, const u16 *excludedSpecies, u8 excludedCount)
++{
++    u16 species;
++    u16 attempts;
++    u8 i;
++
++    for (attempts = 0; attempts < NUM_SPECIES * 2; attempts++)
++    {
++        bool8 duplicate = FALSE;
++
++        species = StrongRandomRange(NUM_SPECIES - 1) + 1;
++        if (!IsEligibleSpecies(species, level))
++            continue;
++
++        for (i = 0; i < excludedCount; i++)
++        {
++            if (excludedSpecies[i] == species)
++            {
++                duplicate = TRUE;
++                break;
++            }
++        }
++        if (!duplicate)
++            return species;
++    }
++
++    // A deterministic scan guarantees termination even if future data changes
++    // make the random candidate pool unexpectedly sparse.
++    for (species = 1; species < NUM_SPECIES; species++)
++    {
++        if (IsEligibleSpecies(species, level))
++            return species;
++    }
++    return SPECIES_BULBASAUR;
++}
++
++static bool8 AddMoveCandidate(u16 *moves, u8 *moveCount, u16 move)
++{
++    u8 i;
++
++    if (move == MOVE_NONE || move >= MOVES_COUNT)
++        return FALSE;
++    for (i = 0; i < *moveCount; i++)
++    {
++        if (moves[i] == move)
++            return FALSE;
++    }
++    if (*moveCount >= REROLL_MOVE_POOL_CAPACITY)
++        return FALSE;
++    moves[(*moveCount)++] = move;
++    return TRUE;
++}
++
++static void AddEggMoves(u16 species, u16 *moves, u8 *moveCount)
++{
++    u16 i;
++
++    for (i = 0; gEggMoves[i] != REROLL_EGG_MOVE_TERMINATOR; i++)
++    {
++        if (gEggMoves[i] == species + REROLL_EGG_MOVE_SPECIES_OFFSET)
++        {
++            for (i++; gEggMoves[i] < REROLL_EGG_MOVE_SPECIES_OFFSET; i++)
++                AddMoveCandidate(moves, moveCount, gEggMoves[i]);
++            return;
++        }
++    }
++}
++
++static u16 ScoreMove(u16 species, u16 move)
++{
++    const struct BattleMove *battleMove = &gBattleMoves[move];
++    u16 score;
++
++    if (battleMove->power == 0)
++        score = 55;
++    else
++        score = 80 + battleMove->power * 2;
++
++    if (battleMove->type == gSpeciesInfo[species].types[0]
++     || battleMove->type == gSpeciesInfo[species].types[1])
++        score += 60;
++    if (battleMove->accuracy != 0)
++        score += battleMove->accuracy / 4;
++
++    // Small stream-derived variation prevents identical legal sets while the
++    // dominant score remains power, accuracy, and same-type utility.
++    score += StrongRandomRange(24);
++    return score;
++}
++
++static void BuildLegalMoveset(struct Pokemon *mon, u16 species, u8 level)
++{
++    u16 candidates[REROLL_MOVE_POOL_CAPACITY];
++    u16 scores[REROLL_MOVE_POOL_CAPACITY];
++    u8 candidateCount = 0;
++    u8 i;
++    u8 slot;
++
++    for (i = 0; i < MAX_LEVEL_UP_MOVES; i++)
++    {
++        u16 packedMove = gLevelUpLearnsets[species][i];
++
++        if (packedMove == LEVEL_UP_END)
++            break;
++        if ((packedMove & LEVEL_UP_MOVE_LV) <= (level << 9))
++            AddMoveCandidate(candidates, &candidateCount, packedMove & LEVEL_UP_MOVE_ID);
++    }
++
++    for (i = 0; i < NUM_TECHNICAL_MACHINES + NUM_HIDDEN_MACHINES; i++)
++    {
++        if (CanSpeciesLearnTMHM(species, i))
++            AddMoveCandidate(candidates, &candidateCount, ItemIdToBattleMoveId(ITEM_TM01 + i));
++    }
++    AddEggMoves(species, candidates, &candidateCount);
++
++    for (i = 0; i < candidateCount; i++)
++        scores[i] = ScoreMove(species, candidates[i]);
++
++    for (slot = 0; slot < MAX_MON_MOVES; slot++)
++    {
++        u16 selectedMove = MOVE_NONE;
++        u16 bestScore = 0;
++        u8 selected = 0;
++
++        for (i = 0; i < candidateCount; i++)
++        {
++            if (scores[i] > bestScore)
++            {
++                bestScore = scores[i];
++                selectedMove = candidates[i];
++                selected = i;
++            }
++        }
++
++        SetMonData(mon, MON_DATA_MOVE1 + slot, &selectedMove);
++        if (selectedMove != MOVE_NONE)
++        {
++            u8 pp = gBattleMoves[selectedMove].pp;
++            SetMonData(mon, MON_DATA_PP1 + slot, &pp);
++            scores[selected] = 0;
++        }
++    }
++}
++
++static void ChooseLegalAbility(struct Pokemon *mon, u16 species)
++{
++    u8 abilityNum = 0;
++
++    if (gSpeciesInfo[species].abilities[1] != ABILITY_NONE)
++        abilityNum = StrongRandomRange(2);
++    SetMonData(mon, MON_DATA_ABILITY_NUM, &abilityNum);
++}
++
++static u8 GetTrainerMonLevel(u16 trainerId, u8 slot)
++{
++    const struct Trainer *trainer = &gTrainers[trainerId];
++    u16 total;
++    u8 i;
++
++    if (trainer->partySize == 0)
++        return 1;
++    if (slot >= trainer->partySize)
++    {
++        total = 0;
++        for (i = 0; i < trainer->partySize; i++)
++            total += GetTrainerMonLevel(trainerId, i);
++        return total / trainer->partySize;
++    }
++
++    switch (trainer->partyFlags)
++    {
++    case 0:
++        return trainer->party.NoItemDefaultMoves[slot].lvl;
++    case F_TRAINER_PARTY_CUSTOM_MOVESET:
++        return trainer->party.NoItemCustomMoves[slot].lvl;
++    case F_TRAINER_PARTY_HELD_ITEM:
++        return trainer->party.ItemDefaultMoves[slot].lvl;
++    default:
++        return trainer->party.ItemCustomMoves[slot].lvl;
++    }
++}
++
++static bool8 IsImportantTrainer(u16 trainerId)
++{
++    u8 trainerClass = gTrainers[trainerId].trainerClass;
++
++    switch (trainerClass)
++    {
++    case TRAINER_CLASS_LEADER:
++    case TRAINER_CLASS_ELITE_FOUR:
++    case TRAINER_CLASS_CHAMPION:
++    case TRAINER_CLASS_RIVAL:
++    case TRAINER_CLASS_AQUA_ADMIN:
++    case TRAINER_CLASS_AQUA_LEADER:
++    case TRAINER_CLASS_MAGMA_ADMIN:
++    case TRAINER_CLASS_MAGMA_LEADER:
++    case TRAINER_CLASS_SALON_MAIDEN:
++    case TRAINER_CLASS_DOME_ACE:
++    case TRAINER_CLASS_PALACE_MAVEN:
++    case TRAINER_CLASS_ARENA_TYCOON:
++    case TRAINER_CLASS_FACTORY_HEAD:
++    case TRAINER_CLASS_PIKE_QUEEN:
++    case TRAINER_CLASS_PYRAMID_KING:
++        return TRUE;
++    default:
++        return FALSE;
++    }
++}
++
++static u8 GetTrainerAverageLevel(u16 trainerId)
++{
++    u16 total = 0;
++    u8 i;
++
++    for (i = 0; i < gTrainers[trainerId].partySize; i++)
++        total += GetTrainerMonLevel(trainerId, i);
++    if (gTrainers[trainerId].partySize == 0)
++        return 1;
++    return total / gTrainers[trainerId].partySize;
++}
++
++static u16 GetNextProgressionBoss(void)
++{
++    static const u16 badgeFlags[] =
++    {
++        FLAG_BADGE01_GET,
++        FLAG_BADGE02_GET,
++        FLAG_BADGE03_GET,
++        FLAG_BADGE04_GET,
++        FLAG_BADGE05_GET,
++        FLAG_BADGE06_GET,
++        FLAG_BADGE07_GET,
++        FLAG_BADGE08_GET,
++    };
++    static const u16 eliteFlags[] =
++    {
++        FLAG_DEFEATED_ELITE_4_SIDNEY,
++        FLAG_DEFEATED_ELITE_4_PHOEBE,
++        FLAG_DEFEATED_ELITE_4_GLACIA,
++        FLAG_DEFEATED_ELITE_4_DRAKE,
++    };
++    u8 i;
++
++    for (i = 0; i < ARRAY_COUNT(badgeFlags); i++)
++    {
++        if (!FlagGet(badgeFlags[i]))
++            return sProgressionBosses[i];
++    }
++    for (i = 0; i < ARRAY_COUNT(eliteFlags); i++)
++    {
++        if (!FlagGet(eliteFlags[i]))
++            return sProgressionBosses[ARRAY_COUNT(badgeFlags) + i];
++    }
++    return TRAINER_WALLACE;
++}
++
++static u32 CreateShinyPersonality(u32 otId)
++{
++    u16 upper = StrongRandom();
++    u16 lower = upper ^ HIHALF(otId) ^ LOHALF(otId);
++
++    // A shiny value of zero is stable and safely below Gen III's threshold.
++    return ((u32)upper << 16) | lower;
++}
++
++static void CreatePlayerParty(u8 level)
++{
++    u16 species[PARTY_SIZE];
++    u32 otId = T1_READ_32(gSaveBlock2Ptr->playerTrainerId);
++    u8 i;
++
++    ZeroPlayerPartyMons();
++    for (i = 0; i < PARTY_SIZE; i++)
++    {
++        u32 personality;
++        u32 experience;
++
++        species[i] = ChooseSpecies(level, species, i);
++        personality = CreateShinyPersonality(otId);
++        CreateMon(&gPlayerParty[i], species[i], level, MAX_PER_STAT_IVS, TRUE,
++                  personality, OT_ID_PRESET, otId);
++        ChooseLegalAbility(&gPlayerParty[i], species[i]);
++        BuildLegalMoveset(&gPlayerParty[i], species[i], level);
++
++        // Pin experience to the exact floor for the assigned level.
++        experience = gExperienceTables[gSpeciesInfo[species[i]].growthRate][level];
++        SetMonData(&gPlayerParty[i], MON_DATA_EXP, &experience);
++        CalculateMonStats(&gPlayerParty[i]);
++    }
++    gPlayerPartyCount = PARTY_SIZE;
++}
++
++static bool8 PlayerPartyMatchesLevel(u8 level)
++{
++    u32 otId = T1_READ_32(gSaveBlock2Ptr->playerTrainerId);
++    u8 i;
++
++    for (i = 0; i < PARTY_SIZE; i++)
++    {
++        u16 species = GetMonData(&gPlayerParty[i], MON_DATA_SPECIES);
++        u32 personality = GetMonData(&gPlayerParty[i], MON_DATA_PERSONALITY);
++
++        if (species == SPECIES_NONE)
++            return FALSE;
++        if (GetMonData(&gPlayerParty[i], MON_DATA_LEVEL) != level)
++            return FALSE;
++        if (GET_SHINY_VALUE(otId, personality) >= SHINY_ODDS)
++            return FALSE;
++    }
++    return TRUE;
++}
++
++void Reroll_EnsurePlayerParty(void)
++{
++    u8 targetLevel;
++
++    InitializeRandom();
++    gSaveBlock2Ptr->optionsBattleStyle = OPTIONS_BATTLE_STYLE_SET;
++    ClearItemSlots(gSaveBlock1Ptr->bagPocket_PokeBalls, BAG_POKEBALLS_COUNT);
++
++    targetLevel = GetTrainerAverageLevel(GetNextProgressionBoss());
++    if (!PlayerPartyMatchesLevel(targetLevel))
++        CreatePlayerParty(targetLevel);
++}
++
++u8 Reroll_CreateTrainerParty(struct Pokemon *party, u16 trainerId, bool8 firstTrainer)
++{
++    u16 selectedSpecies[PARTY_SIZE];
++    u8 monCount;
++    u8 i;
++
++    if (trainerId == TRAINER_SECRET_BASE)
++        return 0;
++    if (!(gBattleTypeFlags & BATTLE_TYPE_TRAINER)
++     || (gBattleTypeFlags & (BATTLE_TYPE_FRONTIER | BATTLE_TYPE_EREADER_TRAINER | BATTLE_TYPE_TRAINER_HILL)))
++        return gTrainers[trainerId].partySize;
++
++    InitializeRandom();
++    if (firstTrainer)
++        ZeroEnemyPartyMons();
++
++    monCount = IsImportantTrainer(trainerId) ? PARTY_SIZE : gTrainers[trainerId].partySize;
++    if (gBattleTypeFlags & BATTLE_TYPE_TWO_OPPONENTS)
++        monCount = min(monCount, PARTY_SIZE / 2);
++
++    for (i = 0; i < monCount; i++)
++    {
++        u8 level = GetTrainerMonLevel(trainerId, i);
++        u16 heldItem = ITEM_NONE;
++
++        selectedSpecies[i] = ChooseSpecies(level, selectedSpecies, i);
++        CreateMon(&party[i], selectedSpecies[i], level,
++                  IsImportantTrainer(trainerId) ? MAX_PER_STAT_IVS : 18,
++                  FALSE, 0, OT_ID_RANDOM_NO_SHINY, 0);
++        ChooseLegalAbility(&party[i], selectedSpecies[i]);
++        BuildLegalMoveset(&party[i], selectedSpecies[i], level);
++
++        if (IsImportantTrainer(trainerId))
++        {
++            heldItem = sUsefulHeldItems[StrongRandomRange(ARRAY_COUNT(sUsefulHeldItems))];
++            SetMonData(&party[i], MON_DATA_HELD_ITEM, &heldItem);
++        }
++    }
++
++    if (gTrainers[trainerId].doubleBattle)
++        gBattleTypeFlags |= BATTLE_TYPE_DOUBLE;
++    return monCount;
++}
++
++u32 Reroll_GetTrainerAiFlags(u16 trainerId)
++{
++    u32 flags = AI_SCRIPT_CHECK_BAD_MOVE | AI_SCRIPT_CHECK_VIABILITY;
++
++    if (IsImportantTrainer(trainerId))
++    {
++        flags |= AI_SCRIPT_TRY_TO_FAINT;
++        flags |= AI_SCRIPT_CHECK_VIABILITY;
++        flags |= AI_SCRIPT_SETUP_FIRST_TURN;
++        flags |= AI_SCRIPT_HP_AWARE;
++    }
++    else if (gTrainers[trainerId].aiFlags & AI_SCRIPT_TRY_TO_FAINT)
++        flags |= AI_SCRIPT_TRY_TO_FAINT;
++    return flags;
++}
++
++u16 Reroll_GetTrainerItem(u16 trainerId, u8 itemSlot)
++{
++    if (IsImportantTrainer(trainerId))
++        return sImportantTrainerItems[itemSlot];
++    return gTrainers[trainerId].items[itemSlot];
++}
++
++void Reroll_OnBattleEnd(void)
++{
++    u8 i;
++
++    if (gBattleOutcome == B_OUTCOME_LOST
++     && !(gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED | BATTLE_TYPE_WALLY_TUTORIAL)))
++    {
++        Reroll_GameOver();
++        return;
++    }
++
++    if (gBattleOutcome != B_OUTCOME_WON || !(gBattleTypeFlags & BATTLE_TYPE_TRAINER))
++        return;
++
++    for (i = 0; i < ARRAY_COUNT(sProgressionBosses); i++)
++    {
++        if (gTrainerBattleOpponent_A == sProgressionBosses[i])
++        {
++            u8 next = i + 1;
++            if (next >= ARRAY_COUNT(sProgressionBosses))
++                next = ARRAY_COUNT(sProgressionBosses) - 1;
++            CreatePlayerParty(GetTrainerAverageLevel(sProgressionBosses[next]));
++            return;
++        }
++    }
++
++    // Optional leader rematches also trigger a fresh party; progression flags
++    // choose the next undefeated League opponent as the target level.
++    if (IsImportantTrainer(gTrainerBattleOpponent_A)
++     && (gTrainers[gTrainerBattleOpponent_A].trainerClass == TRAINER_CLASS_LEADER
++      || gTrainers[gTrainerBattleOpponent_A].trainerClass == TRAINER_CLASS_ELITE_FOUR
++      || gTrainers[gTrainerBattleOpponent_A].trainerClass == TRAINER_CLASS_CHAMPION))
++        CreatePlayerParty(GetTrainerAverageLevel(GetNextProgressionBoss()));
++}
++
++void Reroll_RandomizePickup(void)
++{
++    // Story keys and HMs retain their scripted identity so plot and side-quest
++    // flags continue to describe the item the player actually received.
++    if (GetItemPocket(gSpecialVar_0x8000) == POCKET_KEY_ITEMS
++     || (gSpecialVar_0x8000 >= ITEM_HM01 && gSpecialVar_0x8000 <= ITEM_HM08))
++        return;
++
++    InitializeRandom();
++    gSpecialVar_0x8000 = sPickupItems[StrongRandomRange(ARRAY_COUNT(sPickupItems))];
++    gSpecialVar_0x8001 = 1;
++}
++
++void Reroll_ReplaceBallGift(void)
++{
++    if (gSpecialVar_0x8000 >= FIRST_BALL && gSpecialVar_0x8000 <= LAST_BALL)
++    {
++        InitializeRandom();
++        gSpecialVar_0x8000 = sPickupItems[StrongRandomRange(ARRAY_COUNT(sPickupItems))];
++        gSpecialVar_0x8001 = 1;
++    }
++}
++
++void Reroll_HasSpareRepel(void)
++{
++    gSpecialVar_Result = CheckBagHasItem(ITEM_REPEL, 1)
++                      || CheckBagHasItem(ITEM_SUPER_REPEL, 1)
++                      || CheckBagHasItem(ITEM_MAX_REPEL, 1);
++}
++
++void Reroll_UseSpareRepel(void)
++{
++    u16 item = ITEM_NONE;
++
++    // Prefer the longest duration so the confirmation has the best value.
++    if (CheckBagHasItem(ITEM_MAX_REPEL, 1))
++        item = ITEM_MAX_REPEL;
++    else if (CheckBagHasItem(ITEM_SUPER_REPEL, 1))
++        item = ITEM_SUPER_REPEL;
++    else if (CheckBagHasItem(ITEM_REPEL, 1))
++        item = ITEM_REPEL;
++
++    if (item != ITEM_NONE && RemoveBagItem(item, 1))
++        VarSet(VAR_REPEL_STEP_COUNT, GetItemHoldEffectParam(item));
++}
++
++static void FollowerSpriteCallback(struct Sprite *sprite)
++{
++    struct Sprite *playerSprite;
++    s16 xOffset = 0;
++    s16 yOffset = 0;
++
++    UpdateMonIconFrame(sprite);
++    if (gPlayerAvatar.spriteId >= MAX_SPRITES || !gSprites[gPlayerAvatar.spriteId].inUse)
++    {
++        sprite->invisible = TRUE;
++        return;
++    }
++
++    playerSprite = &gSprites[gPlayerAvatar.spriteId];
++    switch (gObjectEvents[gPlayerAvatar.objectEventId].facingDirection)
++    {
++    case DIR_NORTH:
++        yOffset = 18;
++        break;
++    case DIR_SOUTH:
++        yOffset = -18;
++        break;
++    case DIR_WEST:
++        xOffset = 18;
++        break;
++    case DIR_EAST:
++        xOffset = -18;
++        break;
++    }
++    sprite->x = playerSprite->x + xOffset;
++    sprite->y = playerSprite->y + yOffset;
++    sprite->subpriority = playerSprite->subpriority + (yOffset > 0);
++    sprite->invisible = playerSprite->invisible;
++}
++
++void Reroll_UpdateFollower(void)
++{
++    u16 species;
++    u32 personality;
++
++    if (gMain.inBattle || gPlayerAvatar.spriteId >= MAX_SPRITES)
++        return;
++    species = GetMonData(&gPlayerParty[0], MON_DATA_SPECIES);
++    if (species == SPECIES_NONE)
++        return;
++
++    if (sFollowerSpriteId < MAX_SPRITES
++     && gSprites[sFollowerSpriteId].inUse
++     && gSprites[sFollowerSpriteId].callback == FollowerSpriteCallback
++     && sFollowerSpecies == species)
++        return;
++
++    if (sFollowerSpriteId < MAX_SPRITES
++     && gSprites[sFollowerSpriteId].inUse
++     && gSprites[sFollowerSpriteId].callback == FollowerSpriteCallback)
++        FreeAndDestroyMonIconSprite(&gSprites[sFollowerSpriteId]);
++
++    LoadMonIconPalette(species);
++    personality = GetMonData(&gPlayerParty[0], MON_DATA_PERSONALITY);
++    sFollowerSpriteId = CreateMonIcon(species, FollowerSpriteCallback, 0, 0, 1,
++                                      personality, TRUE);
++    if (sFollowerSpriteId < MAX_SPRITES)
++        sFollowerSpecies = species;
++}
++
++void Reroll_GameOver(void)
++{
++    // Permadeath is intentionally irreversible: erase both save slots before reset.
++    ClearSaveData();
++    DoSoftReset();
++}
+diff --git a/src/scrcmd.c b/src/scrcmd.c
+index 9c75a625cc62d030a3801ed038b2018fef97cf4e..4e6ba2f8beabce5309206cd955446a4fd85dd63b 100644
+--- a/src/scrcmd.c
++++ b/src/scrcmd.c
+@@ -1716,6 +1716,25 @@ bool8 ScrCmd_checkpartymove(struct ScriptContext *ctx)
+     u16 move = ScriptReadHalfword(ctx);
+ 
+     gSpecialVar_Result = PARTY_SIZE;
++
++    // Story HMs are virtual capabilities in Reroll. Scripts still receive a
++    // real party member for field-effect presentation, but no move slot is used.
++    if (move == MOVE_CUT || move == MOVE_FLY || move == MOVE_SURF
++     || move == MOVE_STRENGTH || move == MOVE_FLASH || move == MOVE_ROCK_SMASH
++     || move == MOVE_WATERFALL || move == MOVE_DIVE)
++    {
++        for (i = 0; i < PARTY_SIZE; i++)
++        {
++            u16 species = GetMonData(&gPlayerParty[i], MON_DATA_SPECIES, NULL);
++            if (species != SPECIES_NONE && !GetMonData(&gPlayerParty[i], MON_DATA_IS_EGG))
++            {
++                gSpecialVar_Result = i;
++                gSpecialVar_0x8004 = species;
++                return FALSE;
++            }
++        }
++    }
++
+     for (i = 0; i < PARTY_SIZE; i++)
+     {
+         u16 species = GetMonData(&gPlayerParty[i], MON_DATA_SPECIES, NULL);
+diff --git a/src/shop.c b/src/shop.c
+index c6e78817eb3263af3a35b8778353ca492324772c..e96ca29c42749e9e88a6ec9c834124169d3707ff 100644
+--- a/src/shop.c
++++ b/src/shop.c
+@@ -106,6 +106,7 @@ struct ShopData
+ };
+ 
+ static EWRAM_DATA struct MartInfo sMartInfo = {0};
++static EWRAM_DATA u16 sFilteredPokemartItems[ITEMS_COUNT] = {0};
+ static EWRAM_DATA struct ShopData *sShopData = NULL;
+ static EWRAM_DATA struct ListMenuItem *sListMenuItems = NULL;
+ static EWRAM_DATA u8 (*sItemNames)[ITEM_NAME_LENGTH + 2] = {0};
+@@ -1248,8 +1249,21 @@ static void RecordItemPurchase(u8 taskId)
+ 
+ void CreatePokemartMenu(const u16 *itemsForSale)
+ {
++    u16 sourceIndex;
++    u16 destinationIndex = 0;
++
++    // Balls are absent from challenge mode, including the purchase UI.
++    for (sourceIndex = 0;
++         itemsForSale[sourceIndex] != ITEM_NONE && destinationIndex < ARRAY_COUNT(sFilteredPokemartItems) - 1;
++         sourceIndex++)
++    {
++        if (itemsForSale[sourceIndex] < FIRST_BALL || itemsForSale[sourceIndex] > LAST_BALL)
++            sFilteredPokemartItems[destinationIndex++] = itemsForSale[sourceIndex];
++    }
++    sFilteredPokemartItems[destinationIndex] = ITEM_NONE;
++
+     CreateShopMenu(MART_TYPE_NORMAL);
+-    SetShopItemsForSale(itemsForSale);
++    SetShopItemsForSale(sFilteredPokemartItems);
+     ClearItemPurchases();
+     SetShopMenuCallback(ScriptContext_Enable);
+ }

@@ -1,0 +1,8 @@
+default: true
+
+# Long links, tables, and badges are clearer unwrapped in repository docs.
+MD013: false
+
+# Repeated headings are valid when they occur under different release sections.
+MD024:
+  siblings_only: true

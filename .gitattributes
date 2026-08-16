@@ -1,0 +1,25 @@
+# Normalize text across platforms while preserving executable scripts.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+*.sh text eol=lf
+
+# Keep patches reviewable and recognized as generated diffs.
+*.patch text eol=lf diff whitespace=-blank-at-eol,-space-before-tab
+
+# Never transform binary game, image, audio, or font assets.
+*.agb binary
+*.bin binary
+*.bmp binary
+*.gba binary
+*.gif binary
+*.mid binary
+*.png binary
+*.sav binary
+*.ttf binary
+*.wav binary
+
+# Improve GitHub language statistics for generated/vendor material.
+patches/** linguist-generated=true
+build/** linguist-vendored=true

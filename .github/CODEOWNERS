@@ -1,0 +1,8 @@
+# Default ownership for code, policy, automation, and release artifacts.
+* @4Luke4
+
+# Security and automation changes always require maintainer review.
+/.github/ @4Luke4
+/SECURITY.md @4Luke4
+/LICENSE.md @4Luke4
+/patches/ @4Luke4

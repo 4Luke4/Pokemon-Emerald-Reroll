@@ -1,0 +1,46 @@
+name: Feature request
+description: Propose a scoped gameplay, balance, tooling, or quality-of-life change.
+title: "feat: "
+labels: [enhancement, triage]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+      description: Explain the player or maintainer need, not only the desired implementation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Include progression, balance, save-compatibility, and plot-preservation implications.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe smaller or less invasive options and why they are insufficient.
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: |
+        - [ ] Observable rule...
+        - [ ] Regression check...
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope confirmation
+      options:
+        - label: This proposal preserves the vanilla plot unless it explicitly identifies an approved exception.
+          required: true
+        - label: I searched for an existing issue or pull request.
+          required: true

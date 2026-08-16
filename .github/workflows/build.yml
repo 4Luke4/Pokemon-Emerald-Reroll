@@ -1,0 +1,55 @@
+name: Build and verify ROM
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Modern toolchain
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out Reroll
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            binutils-arm-none-eabi \
+            build-essential \
+            gcc-arm-none-eabi \
+            git \
+            libpng-dev \
+            pkg-config \
+            python3
+
+      - name: Build and validate ROM
+        run: ./scripts/build-rom.sh
+
+      - name: Record non-distributable build metadata
+        run: |
+          sha256sum dist/*.gba > dist/rom.sha256
+          find dist -type f -name '*.gba' -delete
+
+      - name: Upload checksum only
+        uses: actions/upload-artifact@v6
+        with:
+          name: rom-build-metadata
+          path: dist/rom.sha256
+          if-no-files-found: error
+          retention-days: 14
