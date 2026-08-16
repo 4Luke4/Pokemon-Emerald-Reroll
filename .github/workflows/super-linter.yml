@@ -33,7 +33,7 @@ jobs:
         uses: super-linter/super-linter/slim@v8
         env:
           DEFAULT_BRANCH: main
-          FILTER_REGEX_EXCLUDE: ^patches/reroll\.patch$
+          FILTER_REGEX_EXCLUDE: ^patches/integration/.*\.patch$
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: false
           VALIDATE_BASH: true

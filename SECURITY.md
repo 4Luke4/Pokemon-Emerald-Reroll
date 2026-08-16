@@ -12,7 +12,11 @@ Security fixes are provided for the current minor release and the `main` branch.
 
 ## System and Scope
 
-Pokémon Emerald: Reroll is a modular source overlay, integration-patch set, local build toolchain, and set of GitHub Actions workflows. It is not a hosted service and does not publish ROM artifacts. Security review covers:
+Pokémon Emerald: Reroll is a modular source overlay, integration-patch set,
+local build toolchain, and set of GitHub Actions workflows. It is not a hosted
+service. Ordinary CI does not publish ROM artifacts; the manually dispatched,
+maintainer-authorized release workflow is the sole publication path. Security
+review covers:
 
 - standalone feature code under `overlay/` and topic-specific hooks under `patches/integration/`;
 - local preparation, build, and verification scripts;
@@ -33,7 +37,12 @@ The primary assets are repository integrity, workflow credentials, maintainer ac
 - Every integration patch must pass `git apply --check` before mutation. Patch and overlay installation must remain inside the selected generated worktree.
 - Pull-request workflows that execute contributor code have read-only repository permissions.
 - `pull_request_target` workflows must never check out, source, or execute the pull request's head revision. Dependabot auto-merge is restricted to the verified `dependabot[bot]` actor and patch/minor updates, with required checks enforced by GitHub auto-merge.
-- Build logs and artifacts must not contain ROMs, saves, tokens, credentials, or personal data. CI may retain a checksum, never the compiled `.gba`.
+- Push, pull-request, scheduled, and non-release manual workflow artifacts must
+  not contain ROMs, saves, tokens, credentials, or personal data. They may
+  retain checksums and upstream metadata, never the compiled `.gba`.
+- The manual release workflow may publish a `.gba` only from `main`, after exact
+  tag-format validation, explicit rights attestation, source/ROM verification,
+  and creation or verification of a tag at the dispatched commit.
 - Random selection, species/move table traversal, party writes, sprite allocation, and save operations must remain within their declared bounds.
 - Save erasure may occur only after a genuine non-link player defeat or an explicit user-initiated erase flow.
 - A failed verification or build step must stop the workflow rather than publishing or merging an unverified result.
@@ -45,7 +54,8 @@ Please report vulnerabilities that plausibly enable:
 - workflow-token theft, unauthorized repository mutation, or execution of untrusted pull-request code with write permissions;
 - bypass of upstream SHA resolution, per-job revision freezing, or integration-patch checks;
 - path traversal or unintended file mutation outside generated build directories;
-- committed or uploaded ROMs, secrets, sensitive save data, or other prohibited artifacts;
+- committed ROMs, unauthorized ROM uploads, secrets, sensitive save data, or
+  other prohibited artifacts;
 - attacker-controlled out-of-bounds access, memory corruption, or arbitrary code execution in the patched game; or
 - save erasure or durable save corruption outside the documented permadeath rule.
 
@@ -68,7 +78,15 @@ Do not use these exclusions to suppress a finding that crosses a listed trust bo
 
 - ChaCha20 provides a strong random stream, but seed entropy is limited to timing and device/game state because the GBA has no operating-system CSPRNG. Rejection sampling prevents modulo bias; documentation avoids claiming modern hardware entropy guarantees.
 - GitHub Actions use reviewed major-version tags so Dependabot can maintain them. Minimal permissions, actor checks, protected auto-merge, CodeQL, and build verification reduce the risk of mutable action tags.
-- Upstream's moving default branch is an accepted dependency boundary. Protection requires its build check; Reroll resolves it once per job, records the immutable SHA, and runs weekly compatibility builds so breakage fails visibly without publishing a ROM.
+- Upstream's moving default branch is an accepted dependency boundary.
+  Protection requires its build check; Reroll resolves it once per job, records
+  the immutable SHA, and runs weekly compatibility builds so breakage fails
+  visibly without publishing a ROM.
+- Prepared build caches use exact keys covering the upstream SHA, feature
+  sources, integration hooks, build verification scripts, runner architecture,
+  and compiler versions. There are no fallback keys. CodeQL builds are uncached
+  so compiler tracing cannot be bypassed by restored object files. Final ROM,
+  ELF, map, and save outputs are explicitly excluded from caches.
 - ROM header and SHA-256 checks establish build structure and identity, not legal provenance or reproducible equivalence across compiler versions.
 - The project is pre-`1.0`; memory- and save-sensitive changes require emulator testing and real-hardware evidence where applicable.
 

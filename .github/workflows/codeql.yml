@@ -6,8 +6,7 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: "17 4 * * 1"
-  workflow_dispatch:
+    - cron: "41 3 8 * *"
 
 permissions:
   contents: read
@@ -48,7 +47,15 @@ jobs:
             pkg-config \
             python3
 
+      - name: Freeze upstream revision
+        id: upstream
+        run: echo "sha=$(./scripts/resolve-upstream.sh)" >> "${GITHUB_OUTPUT}"
+
+      # CodeQL must observe every compiler invocation. Reusing compiled objects
+      # here could silently reduce analysis coverage, so this build is uncached.
       - name: Prepare and build instrumented source
+        env:
+          UPSTREAM_REF: ${{ steps.upstream.outputs.sha }}
         run: |
           ./scripts/prepare.sh
           python3 scripts/verify-source.py

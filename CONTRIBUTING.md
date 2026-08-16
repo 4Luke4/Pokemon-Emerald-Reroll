@@ -57,7 +57,10 @@ Every pull request should include the smallest relevant evidence:
 - mGBA smoke test for the changed flow
 - real-hardware result when timing, flash save, audio, DMA, or sprite limits are affected
 
-For gameplay changes, list the maps or trainers exercised and whether a fresh save was used. Never upload the resulting `.gba` file; attach logs or the SHA-256 digest instead.
+For gameplay changes, list the maps or trainers exercised and whether a fresh
+save was used. Contributors must never upload the resulting `.gba`; attach logs
+or the SHA-256 digest instead. ROM publication is reserved for authorized
+maintainers using the protected manual release workflow.
 
 ## Commits
 

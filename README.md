@@ -4,13 +4,18 @@
 [![CodeQL](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/codeql.yml/badge.svg)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/codeql.yml)
 [![Lint](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/super-linter.yml/badge.svg)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/super-linter.yml)
 [![Upstream compatibility](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/upstream-compatibility.yml/badge.svg)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/upstream-compatibility.yml)
+[![GitHub release](https://img.shields.io/github/v/release/4Luke4/Pokemon-Emerald-Reroll?include_prereleases)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/releases)
 [![Version](https://img.shields.io/badge/version-v0.1.0-2ea44f)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-proprietary-red)](LICENSE.md)
 
 Pokémon Emerald: Reroll is a permadeath, progression-scaled challenge mode built as a source patch for the [`pret/pokeemerald`](https://github.com/pret/pokeemerald) decompilation. The original story, maps, battles, and core Generation III mechanics remain in place; roster construction, progression, item access, and selected quality-of-life systems are changed deliberately.
 
 > [!IMPORTANT]
-> This project does not include a Pokémon Emerald ROM and does not distribute built ROM artifacts. Build only from lawfully obtained materials and comply with the laws that apply where you live.
+> Source control does not contain a Pokémon Emerald ROM. A maintainer may use
+> the manual release workflow only after confirming that the repository is
+> authorized to publish its output. Build, download, and distribute game
+> material only when you have the necessary rights and comply with applicable
+> law.
 
 ## Challenge rules
 
@@ -64,7 +69,10 @@ Resolve the latest stable upstream revision, apply the modular Reroll sources an
 ./scripts/build-rom.sh
 ```
 
-The local result is `dist/pokemon-emerald-reroll-v0.1.0.gba`. It is intentionally ignored by Git and never uploaded by CI.
+The local result is `dist/pokemon-emerald-reroll-v0.1.0.gba`. It is intentionally
+ignored by Git. Push, pull-request, scheduled, and ordinary manually dispatched
+checks retain only its checksum and exact upstream SHA; only the protected,
+manual release workflow can attach a verified ROM to a GitHub release.
 
 `pret/pokeemerald` currently publishes no releases or tags. Reroll therefore
 defines "latest stable" as the advertised commit of its protected default
@@ -87,6 +95,18 @@ python3 scripts/verify-source.py
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the modular development workflow and
 [UPSTREAM.md](UPSTREAM.md) for the upstream stability policy.
+
+## Releases
+
+Maintainers create releases through the manual-only `Create ROM release`
+workflow. It accepts either a stable tag matching `v[0-9].[0-9].[0-9]` or a
+pre-release tag matching `v[0-9].[0-9].[0-9]-(alpha|beta|pre).[0-9]`. The run
+must originate from `main`, requires an explicit rights attestation, builds
+against one frozen upstream SHA, validates the ROM, creates an annotated tag,
+and publishes the ROM with SHA-256 and upstream-revision manifests.
+
+See the [workflow responsibility matrix](.github/workflows/README.md) for the
+non-overlapping trigger and cache policy.
 
 ## Compatibility and scope
 

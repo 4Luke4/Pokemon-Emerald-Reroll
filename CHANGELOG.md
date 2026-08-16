@@ -9,11 +9,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - A weekly compatibility workflow that builds against the latest protected upstream default-branch commit and records the resolved SHA.
+- A manual-only release workflow that validates stable and pre-release tags,
+  creates an annotated tag, and publishes the verified ROM with checksum and
+  upstream-revision manifests.
+- A workflow responsibility matrix documenting every trigger and exclusive
+  assurance.
 
 ### Changed
 
 - Replaced the fixed upstream commit with a per-build stable-revision resolver and immutable build record.
 - Split the monolithic patch into commented feature modules and small, topic-specific integration patches.
+- Removed redundant manual build and CodeQL triggers and moved CodeQL's recurring
+  analysis away from the weekly upstream-compatibility schedule.
+- Centralized exact-key caches for ordinary, compatibility, and release builds;
+  CodeQL remains deliberately uncached to preserve compiler tracing.
 
 ## [0.1.0] - 2026-08-16
 
