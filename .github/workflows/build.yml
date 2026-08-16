@@ -41,7 +41,7 @@ jobs:
           find dist -type f -name '*.gba' -delete
 
       - name: Upload checksum only
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: rom-build-metadata
           path: |
