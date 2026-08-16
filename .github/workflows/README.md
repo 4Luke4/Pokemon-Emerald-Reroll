@@ -16,6 +16,19 @@ artifact.
 | `label.yml` | Pull-request lifecycle | Apply path-based labels without executing pull-request code. |
 | `stale.yml` | Monthly schedule; manual | Manage inactive issues and pull requests. |
 
+## README status and release badges
+
+README workflow badges are scoped to `main`; push-driven checks also select the
+`push` event so feature-branch or pull-request runs cannot replace the reported
+default-branch status. Build, CodeQL, lint, Conventional Commits, and scheduled
+upstream compatibility each retain a distinct badge matching the responsibility
+matrix above.
+
+Release telemetry uses Shields.io's GitHub release-asset counters. The total
+badge sums all assets across all published releases. The latest badge sums all
+assets attached to GitHub's latest stable release, excluding pre-releases. Both
+badges link directly to the matching GitHub Releases view.
+
 ## Build cache policy
 
 The normal build, upstream compatibility, and release workflows share the local

@@ -1,10 +1,13 @@
 # Pokémon Emerald: Reroll
 
-[![Build and verify ROM](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/build.yml/badge.svg)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/build.yml)
-[![CodeQL](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/codeql.yml/badge.svg)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/codeql.yml)
-[![Lint](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/super-linter.yml/badge.svg)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/super-linter.yml)
-[![Upstream compatibility](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/upstream-compatibility.yml/badge.svg)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/upstream-compatibility.yml)
+[![Build and verify ROM](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/build.yml/badge.svg?branch=main&event=push)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/build.yml?query=branch%3Amain)
+[![CodeQL](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/codeql.yml/badge.svg?branch=main&event=push)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/codeql.yml?query=branch%3Amain)
+[![Lint](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/super-linter.yml/badge.svg?branch=main&event=push)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/super-linter.yml?query=branch%3Amain)
+[![Conventional Commits](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/conventional-commits.yml/badge.svg?branch=main&event=push)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/conventional-commits.yml?query=branch%3Amain)
+[![Upstream compatibility](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/upstream-compatibility.yml/badge.svg?branch=main)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/upstream-compatibility.yml?query=branch%3Amain)
 [![GitHub release](https://img.shields.io/github/v/release/4Luke4/Pokemon-Emerald-Reroll?include_prereleases)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/releases)
+[![Total release downloads](https://img.shields.io/github/downloads/4Luke4/Pokemon-Emerald-Reroll/total?label=downloads)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/releases)
+[![Latest release downloads](https://img.shields.io/github/downloads/4Luke4/Pokemon-Emerald-Reroll/latest/total?label=latest%20downloads)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/releases/latest)
 [![Version](https://img.shields.io/badge/version-v0.1.0-2ea44f)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-proprietary-red)](LICENSE.md)
 
@@ -104,6 +107,10 @@ pre-release tag matching `v[0-9].[0-9].[0-9]-(alpha|beta|pre).[0-9]`. The run
 must originate from `main`, requires an explicit rights attestation, builds
 against one frozen upstream SHA, validates the ROM, creates an annotated tag,
 and publishes the ROM with SHA-256 and upstream-revision manifests.
+
+The download badges count every asset attached to a published release. The
+general count spans all releases; the latest-release count follows GitHub's
+latest stable release and excludes pre-releases.
 
 See the [workflow responsibility matrix](.github/workflows/README.md) for the
 non-overlapping trigger and cache policy.

@@ -14,6 +14,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   upstream-revision manifests.
 - A workflow responsibility matrix documenting every trigger and exclusive
   assurance.
+- README badges for default-branch build, CodeQL, lint, Conventional Commit,
+  and upstream-compatibility status, plus all-release and latest stable-release
+  asset download counts.
 
 ### Changed
 
