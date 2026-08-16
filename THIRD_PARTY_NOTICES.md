@@ -2,7 +2,7 @@
 
 ## `pret/pokeemerald`
 
-The Reroll patch targets the Pokémon Emerald decompilation maintained at <https://github.com/pret/pokeemerald>. That project is fetched at build time from commit `9a83a2bbe8e097e62c00f1dbd56849766775d7b6` and retains its own copyright and MIT license terms.
+Reroll targets the Pokémon Emerald decompilation maintained at <https://github.com/pret/pokeemerald>. The latest commit on its protected default branch is resolved and frozen at build time; the exact revision is recorded in `dist/upstream.sha`. That project retains its own copyright and MIT license terms.
 
 Reroll's proprietary license applies only to original Reroll material. It does not replace or narrow the upstream MIT license for upstream-authored code.
 

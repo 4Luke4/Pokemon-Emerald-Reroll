@@ -1,6 +1,6 @@
 # Contributing to Pokémon Emerald: Reroll
 
-Thank you for improving Reroll. Contributions should preserve the vanilla story, keep challenge rules deterministic at their boundaries, and remain reproducible from the pinned upstream commit.
+Thank you for improving Reroll. Contributions should preserve the vanilla story, keep challenge rules deterministic at their boundaries, and record the dynamically resolved upstream revision used for verification.
 
 ## Before opening a pull request
 
@@ -20,15 +20,20 @@ git config commit.template .gitmessage
 ./scripts/prepare.sh
 ```
 
-The prepared, patched decompilation lives at `build/pokeemerald`. Edit and test there. When the source change is ready, regenerate the repository patch:
+The prepared decompilation lives at `build/pokeemerald`. Feature code belongs in
+the matching file under `overlay/src/reroll/`; do not embed it in an integration
+patch. When an upstream hook must change, edit the prepared file and regenerate
+the topic-specific patches:
 
 ```sh
-./scripts/update-patch.sh
+./scripts/update-patches.sh
 python3 scripts/verify-source.py
 ./scripts/build-rom.sh
 ```
 
-`update-patch.sh` includes only differences from the pinned upstream commit. Review `patches/reroll.patch` before committing; generated noise usually indicates an accidental tool or asset change.
+`update-patches.sh` groups only upstream hook differences by review domain.
+Review every file under `patches/integration/` before committing. New files,
+substantial logic, and binary changes do not belong in those patches.
 
 ## Design requirements
 
@@ -40,6 +45,8 @@ python3 scripts/verify-source.py
 - Do not weaken save erasure on defeat or re-enable Shift prompts and Poké Balls.
 - Use bounded, unbiased selection through the Reroll random stream; do not call the vanilla RNG for gameplay selection.
 - Document hardware or emulator assumptions explicitly.
+- Keep feature modules focused and explain non-obvious invariants inline.
+- Resolve upstream dynamically for normal validation; use `UPSTREAM_REF=<sha>` only to reproduce a recorded build.
 
 ## Tests and evidence
 

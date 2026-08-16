@@ -1,22 +1,20 @@
-name: Build and verify ROM
+name: Upstream compatibility
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  schedule:
+    - cron: "17 4 * * 1"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: build-${{ github.workflow }}-${{ github.ref }}
+  group: upstream-compatibility
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: Modern toolchain
+  latest-stable:
+    name: Protected default branch
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -39,21 +37,27 @@ jobs:
             pkg-config \
             python3
 
-      - name: Build and validate ROM
+      - name: Resolve and build latest stable upstream
         run: ./scripts/build-rom.sh
 
-      - name: Record non-distributable build metadata
+      - name: Record compatibility result
         run: |
           sha256sum dist/*.gba > dist/rom.sha256
-          test -s dist/upstream.sha
           find dist -type f -name '*.gba' -delete
+          {
+            echo "## Upstream compatibility"
+            echo
+            echo "Resolved commit: \`$(<dist/upstream.sha)\`"
+            echo
+            echo "The patched modern ROM built and passed header validation."
+          } >> "${GITHUB_STEP_SUMMARY}"
 
-      - name: Upload checksum only
+      - name: Upload non-distributable metadata
         uses: actions/upload-artifact@v6
         with:
-          name: rom-build-metadata
+          name: upstream-compatibility-metadata
           path: |
             dist/rom.sha256
             dist/upstream.sha
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 30

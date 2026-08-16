@@ -1,17 +1,32 @@
-# Upstream Pin
+# Upstream Resolution Policy
 
 | Field | Value |
 | --- | --- |
 | Repository | `https://github.com/pret/pokeemerald.git` |
-| Commit | `9a83a2bbe8e097e62c00f1dbd56849766775d7b6` |
-| Tree | `426e47d31e5f02d966772e38265b46cb5f65e81f` |
+| Stable channel | Protected default branch |
+| Resolver | `scripts/resolve-upstream.sh` |
+| Build record | `dist/upstream.sha` |
 | Game | English Pokémon Emerald, revision 0 |
 | Compiler mode | Modern (`make modern`) |
 
-The build scripts always fetch the exact commit above and apply `patches/reroll.patch`. Updating the pin is a deliberate maintenance operation, not an automatic dependency update. A pin update must:
+`pret/pokeemerald` does not publish GitHub releases or tags. Reroll therefore
+defines its latest stable source as the commit advertised by upstream's protected
+default branch. That branch requires the upstream build status before changes can
+merge.
 
-1. regenerate and review the complete patch;
-2. pass source verification, CodeQL, and a clean ROM build;
-3. include an mGBA story smoke test through at least the first rival and Gym battles;
-4. document conflicts and behavior changes in `CHANGELOG.md`; and
-5. use a `build(upstream): ...` Conventional Commit.
+Each build resolves the moving branch once, validates a complete 40-character
+SHA, checks out that immutable commit, and records it in `dist/upstream.sha`.
+Subsequent build steps never consume the moving branch name. Supplying
+`UPSTREAM_REF=<recorded-sha>` reproduces the source selection for an earlier job.
+
+The weekly upstream-compatibility workflow resolves the current stable commit,
+applies every integration patch, overlays the standalone feature modules, builds
+the modern ROM, and retains only the upstream SHA and ROM digest. A compatibility
+failure must:
+
+1. fail closed without uploading a ROM;
+2. identify the resolved upstream SHA in the job log;
+3. update only the affected standalone module or topic-specific hook;
+4. pass source verification, CodeQL, and a clean ROM build;
+5. include an mGBA smoke test when behavior, rather than context, changed; and
+6. use a `build(upstream): ...` Conventional Commit when remediation is needed.

@@ -1,13 +1,16 @@
 gameplay:
   - changed-files:
-      - any-glob-to-any-file: "patches/**"
+      - any-glob-to-any-file:
+          - "overlay/**"
+          - "patches/integration/**"
 
 build:
   - changed-files:
       - any-glob-to-any-file:
           - "scripts/build-rom.sh"
           - "scripts/prepare.sh"
-          - "scripts/update-patch.sh"
+          - "scripts/resolve-upstream.sh"
+          - "scripts/update-patches.sh"
           - "scripts/verify-rom.py"
           - "scripts/verify-source.py"
 

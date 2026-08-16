@@ -3,6 +3,7 @@
 [![Build and verify ROM](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/build.yml/badge.svg)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/build.yml)
 [![CodeQL](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/codeql.yml/badge.svg)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/codeql.yml)
 [![Lint](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/super-linter.yml/badge.svg)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/super-linter.yml)
+[![Upstream compatibility](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/upstream-compatibility.yml/badge.svg)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/actions/workflows/upstream-compatibility.yml)
 [![Version](https://img.shields.io/badge/version-v0.1.0-2ea44f)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-proprietary-red)](LICENSE.md)
 
@@ -46,17 +47,17 @@ A Game Boy Advance has no operating-system CSPRNG or dedicated hardware entropy 
 - Git
 - Python 3.11 or newer
 - GNU Make and a C build toolchain
-- `gcc-arm-none-eabi` and `binutils-arm-none-eabi`
+- `gcc-arm-none-eabi`, `binutils-arm-none-eabi`, and ARM newlib headers
 - `libpng` development headers and `pkg-config`
 
 On Debian or Ubuntu:
 
 ```sh
 sudo apt-get update
-sudo apt-get install --yes build-essential gcc-arm-none-eabi binutils-arm-none-eabi libpng-dev pkg-config python3 git
+sudo apt-get install --yes build-essential gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi libpng-dev pkg-config python3 git
 ```
 
-Prepare the pinned upstream source, apply the Reroll patch, build with the modern toolchain, and validate the GBA header:
+Resolve the latest stable upstream revision, apply the modular Reroll sources and integration hooks, build with the modern toolchain, and validate the GBA header:
 
 ```sh
 ./scripts/prepare.sh
@@ -65,18 +66,32 @@ Prepare the pinned upstream source, apply the Reroll patch, build with the moder
 
 The local result is `dist/pokemon-emerald-reroll-v0.1.0.gba`. It is intentionally ignored by Git and never uploaded by CI.
 
+`pret/pokeemerald` currently publishes no releases or tags. Reroll therefore
+defines "latest stable" as the advertised commit of its protected default
+branch, whose upstream protection requires the build check. The resolver freezes
+that commit for the entire job and records it in `dist/upstream.sha`. To reproduce
+a prior build, set `UPSTREAM_REF` to the recorded 40-character commit.
+
 Run source-policy checks without compiling:
 
 ```sh
 python3 scripts/verify-source.py
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the patch-development workflow and upstream-pin maintenance requirements.
+## Source layout
+
+- `overlay/src/reroll/` contains standalone, commented C modules for each feature.
+- `overlay/include/reroll/` contains the public and internal module interfaces.
+- `patches/integration/` contains only small, topic-specific hooks into upstream.
+- `scripts/resolve-upstream.sh` resolves one immutable upstream SHA per build.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the modular development workflow and
+[UPSTREAM.md](UPSTREAM.md) for the upstream stability policy.
 
 ## Compatibility and scope
 
 - Base: English Pokémon Emerald, revision 0.
-- Upstream pin: `pret/pokeemerald` commit `9a83a2bbe8e097e62c00f1dbd56849766775d7b6`.
+- Upstream: the latest build-protected `pret/pokeemerald` default-branch commit, resolved and frozen per build.
 - Save files from vanilla Emerald are unsupported. Begin with a fresh save.
 - Link, Battle Frontier, e-Reader, Trainer Hill, and Secret Base party generation retain their upstream implementations.
 - Version `v0.1.0` is the initial scaffolding release and should be play-tested on both mGBA and real hardware before being treated as tournament-stable.

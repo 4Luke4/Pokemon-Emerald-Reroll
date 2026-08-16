@@ -1,0 +1,51 @@
+diff --git a/src/field_player_avatar.c b/src/field_player_avatar.c
+index 5b22ff74c38fefbc3606945ac7f35f3bec303b3c..cc82b9e989600527fc8fefdb9c171ba621d168ec 100644
+--- a/src/field_player_avatar.c
++++ b/src/field_player_avatar.c
+@@ -13,6 +13,7 @@
+ #include "overworld.h"
+ #include "party_menu.h"
+ #include "random.h"
++#include "reroll/reroll.h"
+ #include "rotating_gate.h"
+ #include "script.h"
+ #include "sound.h"
+@@ -1300,6 +1301,9 @@ bool8 PartyHasMonWithSurf(void)
+ 
+     if (!TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING))
+     {
++        // The lead Pokémon performs virtual HMs after the appropriate badge.
++        if (Reroll_HasVirtualSurfUser())
++            return TRUE;
+         for (i = 0; i < PARTY_SIZE; i++)
+         {
+             if (GetMonData(&gPlayerParty[i], MON_DATA_SPECIES) == SPECIES_NONE)
+diff --git a/src/scrcmd.c b/src/scrcmd.c
+index 9c75a625cc62d030a3801ed038b2018fef97cf4e..a22d0bf7f6ef65c0a3b0623ecf1df025be498e44 100644
+--- a/src/scrcmd.c
++++ b/src/scrcmd.c
+@@ -32,6 +32,7 @@
+ #include "party_menu.h"
+ #include "pokemon_storage_system.h"
+ #include "random.h"
++#include "reroll/reroll.h"
+ #include "overworld.h"
+ #include "rotating_tile_puzzle.h"
+ #include "rtc.h"
+@@ -1716,6 +1717,16 @@ bool8 ScrCmd_checkpartymove(struct ScriptContext *ctx)
+     u16 move = ScriptReadHalfword(ctx);
+ 
+     gSpecialVar_Result = PARTY_SIZE;
++
++    // Story HMs are virtual capabilities; the helper selects a real presenter.
++    i = Reroll_FindVirtualHmUser(move);
++    if (i != PARTY_SIZE)
++    {
++        gSpecialVar_Result = i;
++        gSpecialVar_0x8004 = GetMonData(&gPlayerParty[i], MON_DATA_SPECIES, NULL);
++        return FALSE;
++    }
++
+     for (i = 0; i < PARTY_SIZE; i++)
+     {
+         u16 species = GetMonData(&gPlayerParty[i], MON_DATA_SPECIES, NULL);
