@@ -34,6 +34,7 @@ jobs:
             build-essential \
             gcc-arm-none-eabi \
             git \
+            libnewlib-arm-none-eabi \
             libpng-dev \
             pkg-config \
             python3

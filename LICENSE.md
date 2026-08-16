@@ -4,7 +4,12 @@ Copyright (c) 2026 4Luke4. All rights reserved.
 
 ## Covered material
 
-This license applies only to original Pokémon Emerald: Reroll material authored for this repository, including its challenge-mode implementation, build automation, documentation, and patch files (the “Reroll Material”). It does not grant or restrict rights in Pokémon, Pokémon Emerald, `pret/pokeemerald`, or any other third-party material. Those components retain their respective owners and licenses; see `THIRD_PARTY_NOTICES.md`.
+This license applies only to original Pokémon Emerald: Reroll material authored
+for this repository, including its challenge-mode implementation, build
+automation, documentation, and patch files (the “Reroll Material”). It does
+not grant or restrict rights in Pokémon, Pokémon Emerald, `pret/pokeemerald`,
+or any other third-party material. Those components retain their respective
+owners and licenses; see `THIRD_PARTY_NOTICES.md`.
 
 ## Limited permission
 
@@ -29,7 +34,12 @@ No trademark rights, patent rights, or rights to third-party material are grante
 
 ## Contributions
 
-By intentionally submitting a contribution for inclusion, you grant the copyright holder a perpetual, worldwide, non-exclusive, royalty-free, irrevocable license to use, reproduce, modify, distribute, sublicense, and relicense that contribution as part of this project. You represent that you have the right to grant this permission. Moral rights are retained to the extent they cannot legally be waived.
+By intentionally submitting a contribution for inclusion, you grant the
+copyright holder a perpetual, worldwide, non-exclusive, royalty-free,
+irrevocable license to use, reproduce, modify, distribute, sublicense, and
+relicense that contribution as part of this project. You represent that you
+have the right to grant this permission. Moral rights are retained to the
+extent they cannot legally be waived.
 
 ## Disclaimer
 
