@@ -1,69 +1,47 @@
-# Prerequisites
-*.d
+# Prepared upstream worktree and generated build products.
+/build/
+/dist/
 
-# Compiled Object files
-*.slo
+# Game Boy Advance binaries and linker/debug outputs.
+*.gba
+*.elf
+*.map
+*.sym
+*.sav
+
+# Native compiler products and dependency files.
+*.a
+*.d
+*.dll
+*.dylib
+*.exe
+*.lib
 *.lo
 *.o
 *.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Linker files
-*.ilk
-
-# Debugger Files
-*.pdb
-
-# Compiled Dynamic libraries
 *.so
-*.dylib
-*.dll
 *.so.*
 
+# Coverage, test, linter, and Python caches.
+.cache/
+.coverage
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+coverage.xml
 
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
-# Build directories
-build/
-Build/
-build-*/
-
-# CMake generated files
-CMakeFiles/
-CMakeCache.txt
-cmake_install.cmake
-Makefile
-install_manifest.txt
-compile_commands.json
-
-# Temporary files
-*.tmp
-*.log
+# Editor and operating-system metadata.
+.DS_Store
+.idea/
+.vscode/
 *.bak
 *.swp
+*.tmp
+*~
 
-# vcpkg
-vcpkg_installed/
-
-# debug information files
-*.dwo
-
-# test output & cache
-Testing/
-.cache/
+# Local logs and environment overrides; never commit credentials.
+*.log
+.env
+.env.*
+!.env.example

@@ -1,0 +1,128 @@
+diff --git a/src/bike.c b/src/bike.c
+index d8a3d1ab5221149327c2e8bbf963f0229c96eaa4..0651f3384760794cb410d2e5a7a1a5a0049cfcd4 100644
+--- a/src/bike.c
++++ b/src/bike.c
+@@ -1055,7 +1055,8 @@ void Bike_HandleBumpySlopeJump(void)
+ 
+ bool32 IsRunningDisallowed(u8 metatile)
+ {
+-    if (!gMapHeader.allowRunning || IsRunningDisallowedByMetatile(metatile) == TRUE)
++    // Indoor map headers no longer suppress running; tile safety still applies.
++    if (IsRunningDisallowedByMetatile(metatile) == TRUE)
+         return TRUE;
+     else
+         return FALSE;
+diff --git a/src/new_game.c b/src/new_game.c
+index 80746561b03bc467f4554bfb988cdd3b889457d3..82d23b0563b81d0ec9aa8b8e0ed33c4443f44bf0 100644
+--- a/src/new_game.c
++++ b/src/new_game.c
+@@ -93,7 +93,8 @@ static void SetDefaultOptions(void)
+     gSaveBlock2Ptr->optionsTextSpeed = OPTIONS_TEXT_SPEED_MID;
+     gSaveBlock2Ptr->optionsWindowFrameType = 0;
+     gSaveBlock2Ptr->optionsSound = OPTIONS_SOUND_MONO;
+-    gSaveBlock2Ptr->optionsBattleStyle = OPTIONS_BATTLE_STYLE_SHIFT;
++    // Reroll is a true Set-mode challenge from the first frame of a new run.
++    gSaveBlock2Ptr->optionsBattleStyle = OPTIONS_BATTLE_STYLE_SET;
+     gSaveBlock2Ptr->optionsBattleSceneOff = FALSE;
+     gSaveBlock2Ptr->regionMapZoom = FALSE;
+ }
+diff --git a/src/option_menu.c b/src/option_menu.c
+index 1b1d1c10a3ef756c79f5053d8c6611ef5ae31d8b..4856f7c27b0e0d4952576c15c33426ce115ef2ad 100644
+--- a/src/option_menu.c
++++ b/src/option_menu.c
+@@ -466,13 +466,9 @@ static void BattleScene_DrawChoices(u8 selection)
+ 
+ static u8 BattleStyle_ProcessInput(u8 selection)
+ {
+-    if (JOY_NEW(DPAD_LEFT | DPAD_RIGHT))
+-    {
+-        selection ^= 1;
+-        sArrowPressed = TRUE;
+-    }
+-
+-    return selection;
++    (void)selection;
++    // Reroll is a true Set-mode challenge; Shift can never be selected.
++    return OPTIONS_BATTLE_STYLE_SET;
+ }
+ 
+ static void BattleStyle_DrawChoices(u8 selection)
+diff --git a/src/overworld.c b/src/overworld.c
+index 1d6b81c1f6428cd9a31f4349a93c2207db71f1f3..8c45253003957b240118e244e6c61895656c64ca 100644
+--- a/src/overworld.c
++++ b/src/overworld.c
+@@ -41,6 +41,7 @@
+ #include "play_time.h"
+ #include "random.h"
+ #include "roamer.h"
++#include "reroll/reroll.h"
+ #include "rotating_gate.h"
+ #include "safari_zone.h"
+ #include "save.h"
+@@ -1466,6 +1467,9 @@ static void OverworldBasic(void)
+ {
+     ScriptContext_RunScript();
+     RunTasks();
++    if (gPlayerPartyCount != 0 && gPlayerPartyCount != PARTY_SIZE)
++        Reroll_EnsurePlayerParty();
++    Reroll_UpdateFollower();
+     AnimateSprites();
+     CameraUpdate();
+     UpdateCameraPanning();
+@@ -1549,24 +1553,8 @@ void CB2_NewGame(void)
+ 
+ void CB2_WhiteOut(void)
+ {
+-    u8 state;
+-
+     if (++gMain.state >= 120)
+-    {
+-        FieldClearVBlankHBlankCallbacks();
+-        StopMapMusic();
+-        ResetSafariZoneFlag_();
+-        DoWhiteOut();
+-        ResetInitialPlayerAvatarState();
+-        ScriptContext_Init();
+-        UnlockPlayerFieldControls();
+-        gFieldCallback = FieldCB_WarpExitFadeFromBlack;
+-        state = 0;
+-        DoMapLoadLoop(&state);
+-        SetFieldVBlankCallback();
+-        SetMainCallback1(CB1_Overworld);
+-        SetMainCallback2(CB2_Overworld);
+-    }
++        Reroll_GameOver();
+ }
+ 
+ void CB2_LoadMap(void)
+diff --git a/src/pokemon.c b/src/pokemon.c
+index df5ab2fb441b0682038e0600eab0f992efbe072c..8db8e83de2f31f0a89d6f8881b80d9454c373e75 100644
+--- a/src/pokemon.c
++++ b/src/pokemon.c
+@@ -4771,6 +4771,10 @@ bool8 PokemonUseItemEffects(struct Pokemon *mon, u16 item, u8 partyIndex, u8 mov
+     s8 evChange;
+     u16 evCount;
+ 
++    // Level assignment is owned exclusively by progression rerolls.
++    if (item == ITEM_RARE_CANDY)
++        return TRUE;
++
+     // Get item hold effect
+     heldItem = GetMonData(mon, MON_DATA_HELD_ITEM, NULL);
+     if (heldItem == ITEM_ENIGMA_BERRY)
+@@ -4917,14 +4921,7 @@ bool8 PokemonUseItemEffects(struct Pokemon *mon, u16 item, u8 partyIndex, u8 mov
+             }
+ 
+             // Rare Candy
+-            if ((itemEffect[i] & ITEM3_LEVEL_UP)
+-             && GetMonData(mon, MON_DATA_LEVEL, NULL) != MAX_LEVEL)
+-            {
+-                dataUnsigned = gExperienceTables[gSpeciesInfo[GetMonData(mon, MON_DATA_SPECIES, NULL)].growthRate][GetMonData(mon, MON_DATA_LEVEL, NULL) + 1];
+-                SetMonData(mon, MON_DATA_EXP, &dataUnsigned);
+-                CalculateMonStats(mon);
+-                retVal = FALSE;
+-            }
++            // Reroll parties are progression-locked; Rare Candy has no effect.
+ 
+             // Cure status
+             if ((itemEffect[i] & ITEM3_SLEEP)

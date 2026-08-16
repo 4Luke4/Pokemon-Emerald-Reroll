@@ -1,0 +1,25 @@
+# <type>[optional scope]: <imperative summary>
+#
+# [optional body: explain why and externally visible behavior]
+#
+# [optional footer(s), for example: Closes #123 or BREAKING CHANGE: ...]
+#
+# Allowed types:
+#   feat     player-visible behavior
+#   fix      defect correction
+#   balance  roster, item, or AI tuning
+#   build    build system or dependencies
+#   ci       GitHub Actions and automation
+#   docs     documentation only
+#   refactor internal change without behavior change
+#   perf     performance improvement
+#   test     tests or verification
+#   chore    maintenance outside the categories above
+#
+# Rules:
+# - Keep the summary at 72 characters or fewer.
+# - Use lowercase type and an optional concise scope.
+# - Use imperative mood and omit a trailing period.
+# - Separate the body and footers with blank lines.
+# - Mark breaking changes with ! and a BREAKING CHANGE footer.
+# - Do not use vague summaries such as "updates" or "fix stuff".

@@ -1,0 +1,67 @@
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "41 3 8 * *"
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: codeql-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze C/C++
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out Reroll
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: c-cpp
+          build-mode: manual
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            binutils-arm-none-eabi \
+            build-essential \
+            gcc-arm-none-eabi \
+            git \
+            libnewlib-arm-none-eabi \
+            libpng-dev \
+            pkg-config \
+            python3
+
+      - name: Freeze upstream revision
+        id: upstream
+        run: echo "sha=$(./scripts/resolve-upstream.sh)" >> "${GITHUB_OUTPUT}"
+
+      # CodeQL must observe every compiler invocation. Reusing compiled objects
+      # here could silently reduce analysis coverage, so this build is uncached.
+      - name: Prepare and build instrumented source
+        env:
+          UPSTREAM_REF: ${{ steps.upstream.outputs.sha }}
+        run: |
+          ./scripts/prepare.sh
+          python3 scripts/verify-source.py
+          make -C build/pokeemerald --jobs="$(nproc)" modern
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:c-cpp

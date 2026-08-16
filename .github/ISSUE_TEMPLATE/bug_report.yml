@@ -1,0 +1,75 @@
+name: Bug report
+description: Report a reproducible defect in Reroll gameplay or tooling.
+title: "fix: "
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a defect. Do not attach ROMs, copyrighted game assets, credentials, or private save data. Report security issues through the private channel in `SECURITY.md`.
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: Release tag or full Git commit used for the build.
+      placeholder: v0.1.0 or 0123456789abcdef...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Runtime
+      options:
+        - mGBA
+        - Other emulator
+        - Game Boy Advance hardware
+        - Build or CI only
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Start from a fresh save where possible and list every relevant input, map, and trainer.
+      placeholder: |
+        1. Start a new run...
+        2. Enter...
+        3. Defeat...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs and non-copyrighted evidence
+      description: Paste build output, ROM SHA-256, screenshots, or emulator logs. Do not upload the ROM.
+      render: text
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission checks
+      options:
+        - label: I reproduced this on the latest `main` or explained why I could not.
+          required: true
+        - label: I searched for an existing report.
+          required: true
+        - label: This report contains no ROM, credentials, or sensitive save data.
+          required: true

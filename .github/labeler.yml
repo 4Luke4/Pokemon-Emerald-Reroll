@@ -1,0 +1,40 @@
+gameplay:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "overlay/**"
+          - "patches/integration/**"
+
+build:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "scripts/build-rom.sh"
+          - "scripts/prepare.sh"
+          - "scripts/resolve-upstream.sh"
+          - "scripts/update-patches.sh"
+          - "scripts/verify-rom.py"
+          - "scripts/verify-source.py"
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/actions/**"
+          - ".github/workflows/**"
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.md"
+          - ".gitmessage"
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/dependabot.yml"
+          - "UPSTREAM.md"
+
+security:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "SECURITY.md"
+          - ".github/workflows/codeql.yml"
+          - ".github/workflows/release.yml"

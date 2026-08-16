@@ -1,0 +1,85 @@
+name: Set up Reroll build
+description: Install the ARM toolchain, freeze upstream, and restore an exact build cache.
+
+outputs:
+  upstream-sha:
+    description: Immutable pret/pokeemerald commit selected for this job.
+    value: ${{ steps.upstream.outputs.sha }}
+  cache-hit:
+    description: Whether an exact prepared-worktree cache was restored.
+    value: ${{ steps.build-cache.outputs.cache-hit }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install build dependencies
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install --yes --no-install-recommends \
+          binutils-arm-none-eabi \
+          build-essential \
+          gcc-arm-none-eabi \
+          git \
+          libnewlib-arm-none-eabi \
+          libpng-dev \
+          pkg-config \
+          python3
+
+    - name: Freeze upstream revision
+      id: upstream
+      shell: bash
+      run: echo "sha=$(./scripts/resolve-upstream.sh)" >> "${GITHUB_OUTPUT}"
+
+    - name: Fingerprint build toolchain
+      id: toolchain
+      shell: bash
+      run: |
+        {
+          arm-none-eabi-gcc -dumpfullversion -dumpversion
+          gcc -dumpfullversion -dumpversion
+          make --version | head -n 1
+        } | sha256sum | awk '{print "id=" $1}' >> "${GITHUB_OUTPUT}"
+
+    - name: Fingerprint build inputs
+      id: source
+      shell: bash
+      run: |
+        find \
+          overlay \
+          patches/integration \
+          scripts/prepare.sh \
+          scripts/build-rom.sh \
+          scripts/verify-source.py \
+          scripts/verify-rom.py \
+          -type f -print0 \
+          | sort -z \
+          | xargs -0 sha256sum \
+          | sha256sum \
+          | awk '{print "id=" $1}' >> "${GITHUB_OUTPUT}"
+
+    - name: Compose exact cache key
+      id: cache-key
+      shell: bash
+      run: |
+        printf 'value=reroll-build-v1-%s-%s-%s-%s-%s\n' \
+          "${RUNNER_OS}" \
+          "${RUNNER_ARCH}" \
+          "${{ steps.toolchain.outputs.id }}" \
+          "${{ steps.upstream.outputs.sha }}" \
+          "${{ steps.source.outputs.id }}" >> "${GITHUB_OUTPUT}"
+
+    # Exact keys are intentional: a partially compatible prepared worktree can
+    # be dirty, and reusing objects from another compiler can invalidate a ROM.
+    - name: Restore exact prepared build
+      id: build-cache
+      uses: actions/cache@v6
+      with:
+        path: |
+          build/pokeemerald
+          build/pokeemerald.reroll-prepared
+          !build/pokeemerald/**/*.gba
+          !build/pokeemerald/**/*.elf
+          !build/pokeemerald/**/*.map
+          !build/pokeemerald/**/*.sav
+        key: ${{ steps.cache-key.outputs.value }}

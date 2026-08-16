@@ -1,0 +1,60 @@
+diff --git a/src/item.c b/src/item.c
+index a3095c32d7a34caed28011b142c247914807d908..39bd00e312eedb90fb1f791cc75aa1948118e854 100644
+--- a/src/item.c
++++ b/src/item.c
+@@ -12,6 +12,7 @@
+ #include "item_use.h"
+ #include "battle_pyramid.h"
+ #include "battle_pyramid_bag.h"
++#include "reroll/reroll.h"
+ #include "constants/items.h"
+ #include "constants/hold_effects.h"
+ 
+@@ -131,6 +132,8 @@ bool8 CheckBagHasItem(u16 itemId, u16 count)
+     u8 i;
+     u8 pocket;
+ 
++    if (!Reroll_CanStoreItem(itemId))
++        return FALSE;
+     if (GetItemPocket(itemId) == 0)
+         return FALSE;
+     if (CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE || FlagGet(FLAG_STORING_ITEMS_IN_PYRAMID_BAG) == TRUE)
+@@ -178,6 +181,8 @@ bool8 CheckBagHasSpace(u16 itemId, u16 count)
+     u16 slotCapacity;
+     u16 ownedCount;
+ 
++    if (!Reroll_CanStoreItem(itemId))
++        return FALSE;
+     if (GetItemPocket(itemId) == POCKET_NONE)
+         return FALSE;
+ 
+@@ -239,6 +244,8 @@ bool8 AddBagItem(u16 itemId, u16 count)
+ {
+     u8 i;
+ 
++    if (!Reroll_CanStoreItem(itemId))
++        return FALSE;
+     if (GetItemPocket(itemId) == POCKET_NONE)
+         return FALSE;
+ 
+diff --git a/src/shop.c b/src/shop.c
+index c6e78817eb3263af3a35b8778353ca492324772c..e6f8a9e789d9128974afe6579c910ba487b41dc6 100644
+--- a/src/shop.c
++++ b/src/shop.c
+@@ -25,6 +25,7 @@
+ #include "palette.h"
+ #include "party_menu.h"
+ #include "scanline_effect.h"
++#include "reroll/reroll.h"
+ #include "script.h"
+ #include "shop.h"
+ #include "sound.h"
+@@ -1249,7 +1250,7 @@ static void RecordItemPurchase(u8 taskId)
+ void CreatePokemartMenu(const u16 *itemsForSale)
+ {
+     CreateShopMenu(MART_TYPE_NORMAL);
+-    SetShopItemsForSale(itemsForSale);
++    SetShopItemsForSale(Reroll_FilterMartInventory(itemsForSale));
+     ClearItemPurchases();
+     SetShopMenuCallback(ScriptContext_Enable);
+ }

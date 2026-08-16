@@ -1,0 +1,126 @@
+diff --git a/asm/macros/event.inc b/asm/macros/event.inc
+index 89e7e50a58ee638ed7981581b9dc922543b7974e..578206ee5c1e5aac8caae389d1e25454af0b2deb 100644
+--- a/asm/macros/event.inc
++++ b/asm/macros/event.inc
+@@ -1945,6 +1945,7 @@
+ 	.macro giveitem item:req, amount=1
+ 	setorcopyvar VAR_0x8000, \item
+ 	setorcopyvar VAR_0x8001, \amount
++	special Reroll_ReplaceBallGift
+ 	callstd STD_OBTAIN_ITEM
+ 	.endm
+ 
+@@ -1953,6 +1954,7 @@
+ 	.macro finditem item:req, amount=1
+ 	setorcopyvar VAR_0x8000, \item
+ 	setorcopyvar VAR_0x8001, \amount
++	special Reroll_RandomizePickup
+ 	callstd STD_FIND_ITEM
+ 	.endm
+ 
+diff --git a/data/scripts/field_move_scripts.inc b/data/scripts/field_move_scripts.inc
+index 3e99fc08e2d4ffaeb0395ee9d49e21894a74fe1d..c5d8ed26d87e81265f7707907ec7fda5beae16fa 100644
+--- a/data/scripts/field_move_scripts.inc
++++ b/data/scripts/field_move_scripts.inc
+@@ -7,8 +7,6 @@ EventScript_CutTree::
+ 	setfieldeffectargument 0, VAR_RESULT
+ 	bufferpartymonnick STR_VAR_1, VAR_RESULT
+ 	buffermovename STR_VAR_2, MOVE_CUT
+-	msgbox Text_WantToCut, MSGBOX_YESNO
+-	goto_if_eq VAR_RESULT, NO, EventScript_CancelCut
+ 	msgbox Text_MonUsedFieldMove, MSGBOX_DEFAULT
+ 	closemessage
+ 	dofieldeffect FLDEFF_USE_CUT_ON_TREE
+@@ -66,8 +64,6 @@ EventScript_RockSmash::
+ 	setfieldeffectargument 0, VAR_RESULT
+ 	bufferpartymonnick STR_VAR_1, VAR_RESULT
+ 	buffermovename STR_VAR_2, MOVE_ROCK_SMASH
+-	msgbox Text_WantToSmash, MSGBOX_YESNO
+-	goto_if_eq VAR_RESULT, NO, EventScript_CancelSmash
+ 	msgbox Text_MonUsedFieldMove, MSGBOX_DEFAULT
+ 	closemessage
+ 	dofieldeffect FLDEFF_USE_ROCK_SMASH
+@@ -128,8 +124,6 @@ EventScript_StrengthBoulder::
+ 	checkpartymove MOVE_STRENGTH
+ 	goto_if_eq VAR_RESULT, PARTY_SIZE, EventScript_CantStrength
+ 	setfieldeffectargument 0, VAR_RESULT
+-	msgbox Text_WantToStrength, MSGBOX_YESNO
+-	goto_if_eq VAR_RESULT, NO, EventScript_CancelStrength
+ 	closemessage
+ 	dofieldeffect FLDEFF_USE_STRENGTH
+ 	waitstate
+@@ -188,8 +182,6 @@ EventScript_UseWaterfall::
+ 	goto_if_eq VAR_RESULT, PARTY_SIZE, EventScript_CantWaterfall
+ 	bufferpartymonnick STR_VAR_1, VAR_RESULT
+ 	setfieldeffectargument 0, VAR_RESULT
+-	msgbox Text_WantToWaterfall, MSGBOX_YESNO
+-	goto_if_eq VAR_RESULT, NO, EventScript_EndWaterfall
+ 	msgbox Text_MonUsedWaterfall, MSGBOX_DEFAULT
+ 	dofieldeffect FLDEFF_USE_WATERFALL
+ 	goto EventScript_EndWaterfall
+@@ -222,8 +214,6 @@ EventScript_UseDive::
+ 	bufferpartymonnick STR_VAR_1, VAR_RESULT
+ 	setfieldeffectargument 0, VAR_RESULT
+ 	setfieldeffectargument 1, 1
+-	msgbox Text_WantToDive, MSGBOX_YESNO
+-	goto_if_eq VAR_RESULT, NO, EventScript_EndDive
+ 	msgbox Text_MonUsedDive, MSGBOX_DEFAULT
+ 	dofieldeffect FLDEFF_USE_DIVE
+ 	goto EventScript_EndDive
+@@ -245,8 +235,6 @@ EventScript_UseDiveUnderwater::
+ 	bufferpartymonnick STR_VAR_1, VAR_RESULT
+ 	setfieldeffectargument 0, VAR_RESULT
+ 	setfieldeffectargument 1, 1
+-	msgbox Text_WantToSurface, MSGBOX_YESNO
+-	goto_if_eq VAR_RESULT, NO, EventScript_EndSurface
+ 	msgbox Text_MonUsedDive, MSGBOX_DEFAULT
+ 	dofieldeffect FLDEFF_USE_DIVE
+ 	goto EventScript_EndSurface
+diff --git a/data/scripts/repel.inc b/data/scripts/repel.inc
+index fc178603c0e8d71f52369356192ab9db5cd3f0dd..6c29a135a23f40c496ec77128491da92c86307c9 100644
+--- a/data/scripts/repel.inc
++++ b/data/scripts/repel.inc
+@@ -1,6 +1,18 @@
+ EventScript_RepelWoreOff::
++	special Reroll_HasSpareRepel
++	goto_if_eq VAR_RESULT, FALSE, EventScript_RepelWoreOffNoSpare
++	msgbox Text_RepelWoreOffUseAnother, MSGBOX_YESNO
++	goto_if_eq VAR_RESULT, NO, EventScript_RepelWoreOffEnd
++	special Reroll_UseSpareRepel
++	goto EventScript_RepelWoreOffEnd
++EventScript_RepelWoreOffNoSpare::
+ 	msgbox Text_RepelWoreOff, MSGBOX_SIGN
++EventScript_RepelWoreOffEnd::
+ 	end
+ 
+ Text_RepelWoreOff:
+ 	.string "REPEL's effect wore off…$"
++
++Text_RepelWoreOffUseAnother:
++	.string "REPEL's effect wore off…\p"
++	.string "Use another REPEL?$"
+diff --git a/data/scripts/surf.inc b/data/scripts/surf.inc
+index edb116f991edef3bd58ccc489b25fa44acb32425..d022b6aa2309331a254a67bc18b8498a937dde8e 100644
+--- a/data/scripts/surf.inc
++++ b/data/scripts/surf.inc
+@@ -4,8 +4,6 @@ EventScript_UseSurf::
+ 	bufferpartymonnick STR_VAR_1, VAR_RESULT
+ 	setfieldeffectargument 0, VAR_RESULT
+ 	lockall
+-	msgbox gText_WantToUseSurf, MSGBOX_YESNO
+-	goto_if_eq VAR_RESULT, NO, EventScript_ReleaseUseSurf
+ 	msgbox gText_PlayerUsedSurf, MSGBOX_DEFAULT
+ 	dofieldeffect FLDEFF_USE_SURF
+ EventScript_ReleaseUseSurf::
+diff --git a/data/specials.inc b/data/specials.inc
+index 34f27bfcfde2f283d3cbe8df4493196347238457..31ff3acebd9f50c335f97498471922f6c7ab7d9c 100644
+--- a/data/specials.inc
++++ b/data/specials.inc
+@@ -540,3 +540,7 @@ gSpecials::
+ 	def_special RemoveRecordsWindow
+ 	def_special CloseDeptStoreElevatorWindow
+ 	def_special TrySetBattleTowerLinkType
++	def_special Reroll_RandomizePickup
++	def_special Reroll_ReplaceBallGift
++	def_special Reroll_HasSpareRepel
++	def_special Reroll_UseSpareRepel
