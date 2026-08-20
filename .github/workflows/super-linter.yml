@@ -7,10 +7,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  packages: read
-  statuses: write
+# Deny token access by default. The only job receives its reviewed minimum
+# explicitly, so future jobs cannot inherit status-write permission.
+permissions: {}
 
 concurrency:
   group: lint-${{ github.workflow }}-${{ github.ref }}
@@ -21,6 +20,11 @@ jobs:
     name: Changed files
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: read
+      # Super-Linter publishes the lint result as a GitHub commit status.
+      statuses: write
 
     steps:
       - name: Check out repository

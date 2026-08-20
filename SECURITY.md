@@ -39,8 +39,8 @@ The primary assets are repository integrity, workflow credentials, maintainer ac
 - Every integration patch must pass `git apply --check` before mutation. Patch and overlay installation must remain inside the selected generated worktree.
 - Pull-request workflows that execute contributor code have read-only repository permissions.
 - CodeQL issue synchronization may write only the repository-owned tracker after
-  a successful default-branch analysis; it must never treat a failed or cancelled
-  analysis as a clean result.
+  successful default-branch Actions and C/C++ analyses; it must never treat a
+  failed or cancelled analysis job as a clean result.
 - `pull_request_target` workflows must never check out, source, or execute the pull request's head revision. Dependabot auto-merge is restricted to the verified `dependabot[bot]` actor and patch/minor updates, with required checks enforced by GitHub auto-merge.
 - Push, pull-request, scheduled, and non-release manual workflow artifacts must
   not contain ROMs, saves, tokens, credentials, or personal data. They may

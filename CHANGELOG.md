@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-08-20
+
+### Security
+
+- Changed Super-Linter to deny all workflow-level token permissions and grant
+  only `contents: read`, `packages: read`, and `statuses: write` to the lint job.
+- Added an independent GitHub Actions CodeQL analysis so workflow findings are
+  reevaluated on every scan and the generated tracker can close them reliably.
+- Added source-policy checks that prevent either least-privilege configuration
+  or the Actions analysis category from being removed accidentally.
+
 ## [0.2.1] - 2026-08-20
 
 ### Changed
@@ -21,10 +32,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Fixed the five C/C++ CodeQL findings reported in issue #8 by promoting host
   image-allocation arithmetic before multiplication and matching `mid2agb`'s
   variadic format argument to its conversion specifier.
-- Confirmed Super-Linter's repository token remains limited to the documented
-  `contents: read`, `packages: read`, and `statuses: write` permissions; the
-  corresponding stale alert will close after the next successful analysis of
-  the default branch.
+- Declared Super-Linter's repository token permissions explicitly as
+  `contents: read`, `packages: read`, and `statuses: write`.
 
 ## [0.2.0] - 2026-08-20
 
@@ -81,7 +90,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Reproducible build and ROM verification scripts.
 - CI, CodeQL, linting, Dependabot, issue forms, pull-request guidance, ownership rules, and repository policy documents.
 
-[Unreleased]: https://github.com/4Luke4/Pokemon-Emerald-Reroll/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/4Luke4/Pokemon-Emerald-Reroll/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/4Luke4/Pokemon-Emerald-Reroll/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/4Luke4/Pokemon-Emerald-Reroll/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/4Luke4/Pokemon-Emerald-Reroll/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/4Luke4/Pokemon-Emerald-Reroll/releases/tag/v0.1.0
