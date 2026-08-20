@@ -9,7 +9,8 @@ readonly requested_ref="${UPSTREAM_REF:-}"
 if [[ -n "${requested_ref}" ]]; then
     # Explicit immutable SHAs are useful for reproducing an older CI build.
     if [[ "${requested_ref}" =~ ^[0-9a-fA-F]{40}$ ]]; then
-        resolved_commit="${requested_ref,,}"
+        # macOS still ships Bash 3.2, which predates ${value,,} lowercasing.
+        resolved_commit="$(printf '%s' "${requested_ref}" | tr '[:upper:]' '[:lower:]')"
     else
         # Prefer an annotated tag's peeled commit, then an exact branch/tag ref.
         remote_refs="$(git ls-remote "${upstream_url}" \

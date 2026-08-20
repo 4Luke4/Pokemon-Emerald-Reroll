@@ -45,18 +45,16 @@ runs:
       id: source
       shell: bash
       run: |
-        find \
+        fingerprint="$(python3 scripts/fingerprint.py \
           overlay \
           patches/integration \
           scripts/prepare.sh \
           scripts/build-rom.sh \
+          scripts/fingerprint.py \
           scripts/verify-source.py \
           scripts/verify-rom.py \
-          -type f -print0 \
-          | sort -z \
-          | xargs -0 sha256sum \
-          | sha256sum \
-          | awk '{print "id=" $1}' >> "${GITHUB_OUTPUT}"
+          VERSION)"
+        printf 'id=%s\n' "${fingerprint}" >> "${GITHUB_OUTPUT}"
 
     - name: Compose exact cache key
       id: cache-key

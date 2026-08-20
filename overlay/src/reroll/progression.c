@@ -107,7 +107,7 @@ static bool8 PlayerPartyMatchesLevel(u8 level)
         u16 species = GetMonData(&gPlayerParty[i], MON_DATA_SPECIES);
         u32 personality = GetMonData(&gPlayerParty[i], MON_DATA_PERSONALITY);
 
-        if (species == SPECIES_NONE)
+        if (!RerollPokemon_IsEligibleSpecies(species, level))
             return FALSE;
         if (GetMonData(&gPlayerParty[i], MON_DATA_LEVEL) != level)
             return FALSE;

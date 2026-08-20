@@ -8,6 +8,7 @@ artifact.
 | --- | --- | --- |
 | `build.yml` | Push or pull request to `main` | Compile and validate the ROM; retain only its checksum and upstream SHA. |
 | `codeql.yml` | Push or pull request to `main`; monthly schedule | Run an uncached, instrumented C/C++ security analysis. |
+| `codeql-issue.yml` | Successful default-branch CodeQL completion; manual | Synchronize one issue with every open default-branch CodeQL finding and close it after a clean analysis. |
 | `super-linter.yml` | Push or pull request to `main`; manual | Lint changed source, scripts, documentation, and workflow definitions. |
 | `conventional-commits.yml` | Push to `main`; pull-request lifecycle | Validate Conventional Commit subjects. |
 | `upstream-compatibility.yml` | Weekly schedule; manual | Test the latest protected upstream revision independently of repository changes. |
@@ -42,10 +43,22 @@ hit still performs the final link and ROM validation.
 CodeQL intentionally bypasses this cache. Its compiler tracing must observe a
 clean instrumented build; restoring object files could reduce analysis coverage.
 
+## CodeQL issue synchronization
+
+`codeql-issue.yml` runs only after a successful CodeQL analysis of `main`, so a
+failed or cancelled scan can never produce a false clean result. The reporting
+script discovers the repository's default branch through GitHub's API, paginates
+all open CodeQL alerts, and owns one issue identified by a private Markdown
+marker. The issue is reopened and refreshed when findings exist, and it is
+closed with the `completed` reason only after a successful analysis returns no
+open findings. The workflow checks out only trusted default-branch code and has
+the minimum read/write permissions required for alerts and issues.
+
 ## Release policy
 
 Only `release.yml` can publish a `.gba`, and only when manually dispatched from
 `main`. Stable tags must match `v[0-9].[0-9].[0-9]`. Pre-release tags must match
 `v[0-9].[0-9].[0-9]-(alpha|beta|pre).[0-9]`. The workflow requires an explicit
-rights attestation, validates the ROM, creates an annotated tag, and attaches the
-ROM, SHA-256 manifest, and exact upstream revision to the GitHub release.
+rights attestation, requires the tag's base version to match `VERSION`, validates
+the ROM, creates an annotated tag, and attaches the ROM, SHA-256 manifest, and
+exact upstream revision to the GitHub release.

@@ -1,0 +1,40 @@
+name: Synchronize CodeQL issue
+
+on:
+  workflow_run:
+    workflows: [CodeQL]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  security-events: read
+
+concurrency:
+  group: codeql-issue-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  synchronize:
+    name: Report default-branch findings
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # workflow_run executes this trusted default-branch workflow, never code
+      # from the analyzed pull request or branch.
+      - name: Check out trusted reporting code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Open, update, or close the CodeQL tracker
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 .github/scripts/sync-codeql-issue.py

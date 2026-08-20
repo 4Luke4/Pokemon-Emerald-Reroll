@@ -8,7 +8,7 @@
 [![GitHub release](https://img.shields.io/github/v/release/4Luke4/Pokemon-Emerald-Reroll?include_prereleases)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/releases)
 [![Total release downloads](https://img.shields.io/github/downloads/4Luke4/Pokemon-Emerald-Reroll/total?label=downloads)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/releases)
 [![Latest release downloads](https://img.shields.io/github/downloads/4Luke4/Pokemon-Emerald-Reroll/latest/total?label=latest%20downloads)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/releases/latest)
-[![Version](https://img.shields.io/badge/version-v0.1.0-2ea44f)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v0.2.0-2ea44f)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-proprietary-red)](LICENSE.md)
 
 Pokémon Emerald: Reroll is a permadeath, progression-scaled challenge mode built as a source patch for the [`pret/pokeemerald`](https://github.com/pret/pokeemerald) decompilation. The original story, maps, battles, and core Generation III mechanics remain in place; roster construction, progression, item access, and selected quality-of-life systems are changed deliberately.
@@ -27,7 +27,7 @@ Pokémon Emerald: Reroll is a permadeath, progression-scaled challenge mode buil
 | Player party | Always six unique shiny Pokémon, rebuilt before the first battle and after every Gym Leader, Elite Four, or Champion victory. |
 | Player level | All six Pokémon use the floor of the next progression boss's vanilla average level. Experience, EV gain, and Rare Candy leveling are disabled. |
 | Species | Any valid species is eligible through level 50. Above level 50, only species with no further evolution are eligible. Legendaries remain eligible. |
-| Moves and abilities | Moves come only from the species' level-up, compatible TM/HM, and egg-move pools. Four scored moves are preferred. Abilities are selected only from the species' legal slots. |
+| Moves and abilities | Moves come only from the species' level-up, compatible TM/HM, and egg-move pools. A reliable STAB attack is anchored when legally available; useful support, coverage, species stats, and move-pair synergy guide weighted selection for the remaining slots. Abilities are selected only from the species' legal slots. |
 | Trainer parties | Vanilla slot levels are preserved. Important trainers receive six Pokémon; added slots use that trainer's vanilla average level. |
 | Trainer difficulty | Ordinary trainers use bad-move and viability checks. Important trainers add KO planning, first-turn setup, HP awareness, six useful held items, and four usable trainer items. |
 | Items | Ordinary field pickups are rerolled from a battle-useful allowlist. Plot keys and HMs retain their identities. Ball gifts become battle items; balls cannot be stored or bought. |
@@ -40,7 +40,7 @@ Pokémon Emerald: Reroll is a permadeath, progression-scaled challenge mode buil
 - Repel expiration offers to consume another available Repel, preferring the longest duration.
 - Story field moves are virtual capabilities after their normal badge checks and do not consume move slots.
 - Interacting with Cut, Rock Smash, Strength, Surf, Waterfall, and Dive obstacles executes the action without a confirmation prompt.
-- The lead party member's animated icon follows the player in the overworld.
+- The first conscious party member's animated icon follows the player in the overworld.
 
 ## Randomness model
 
@@ -50,29 +50,118 @@ A Game Boy Advance has no operating-system CSPRNG or dedicated hardware entropy 
 
 ## Build
 
-### Prerequisites
+The build scripts support Linux, Windows through WSL, and macOS. Each platform
+needs Git, Python 3.11 or newer, GNU Make, a host C compiler, libpng,
+`pkg-config`, and a complete `arm-none-eabi` toolchain with newlib.
 
-- Git
-- Python 3.11 or newer
-- GNU Make and a C build toolchain
-- `gcc-arm-none-eabi`, `binutils-arm-none-eabi`, and ARM newlib headers
-- `libpng` development headers and `pkg-config`
+### Linux (Debian or Ubuntu)
 
-On Debian or Ubuntu:
+Install the packages used by CI:
 
 ```sh
 sudo apt-get update
-sudo apt-get install --yes build-essential gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi libpng-dev pkg-config python3 git
+sudo apt-get install --yes \
+  binutils-arm-none-eabi \
+  build-essential \
+  gcc-arm-none-eabi \
+  git \
+  libnewlib-arm-none-eabi \
+  libpng-dev \
+  pkg-config \
+  python3
 ```
 
-Resolve the latest stable upstream revision, apply the modular Reroll sources and integration hooks, build with the modern toolchain, and validate the GBA header:
+Clone and build:
 
 ```sh
+git clone https://github.com/4Luke4/Pokemon-Emerald-Reroll.git
+cd Pokemon-Emerald-Reroll
 ./scripts/prepare.sh
 ./scripts/build-rom.sh
 ```
 
-The local result is `dist/pokemon-emerald-reroll-v0.1.0.gba`. It is intentionally
+### Windows 10 or 11 (WSL 2)
+
+Reroll's build entry points are Bash scripts, so the supported Windows path is
+[WSL 2 with Ubuntu](https://learn.microsoft.com/windows/wsl/install). Open
+PowerShell as Administrator, install WSL, and restart Windows if prompted:
+
+```powershell
+wsl --install -d Ubuntu
+```
+
+Open the installed Ubuntu terminal and install the Linux dependencies:
+
+```sh
+sudo apt-get update
+sudo apt-get install --yes \
+  binutils-arm-none-eabi \
+  build-essential \
+  gcc-arm-none-eabi \
+  git \
+  libnewlib-arm-none-eabi \
+  libpng-dev \
+  pkg-config \
+  python3
+```
+
+Keep the checkout in the WSL file system for predictable permissions and build
+performance, then build it from the same Ubuntu terminal:
+
+```sh
+mkdir -p ~/src
+cd ~/src
+git clone https://github.com/4Luke4/Pokemon-Emerald-Reroll.git
+cd Pokemon-Emerald-Reroll
+./scripts/prepare.sh
+./scripts/build-rom.sh
+```
+
+The result is available to Windows Explorer at
+`\\wsl$\Ubuntu\home\<your-wsl-user>\src\Pokemon-Emerald-Reroll\dist`.
+
+### macOS
+
+Install Apple's command-line developer tools, then use
+[Homebrew](https://brew.sh/) for the host dependencies:
+
+```sh
+xcode-select --install
+brew install git libpng pkgconf python
+```
+
+The Homebrew cross compiler is intentionally not used because it is built
+without target C-library headers. Install the complete devkitARM toolchain from
+the official [devkitPro pacman release](https://github.com/devkitPro/pacman/releases/latest),
+open the downloaded `.pkg`, and then run:
+
+```sh
+sudo dkp-pacman -Syu
+sudo dkp-pacman -S gba-dev devkitarm-rules
+```
+
+Make devkitARM visible to the current shell and future zsh sessions:
+
+```sh
+export DEVKITPRO=/opt/devkitpro
+export DEVKITARM="${DEVKITPRO}/devkitARM"
+printf '%s\n' \
+  'export DEVKITPRO=/opt/devkitpro' \
+  'export DEVKITARM="${DEVKITPRO}/devkitARM"' >> ~/.zprofile
+```
+
+Clone and build:
+
+```sh
+git clone https://github.com/4Luke4/Pokemon-Emerald-Reroll.git
+cd Pokemon-Emerald-Reroll
+./scripts/prepare.sh
+./scripts/build-rom.sh
+```
+
+### Build output and verification
+
+The local result is `dist/pokemon-emerald-reroll-v0.2.0.gba`. It is intentionally
 ignored by Git. Push, pull-request, scheduled, and ordinary manually dispatched
 checks retain only its checksum and exact upstream SHA; only the protected,
 manual release workflow can attach a verified ROM to a GitHub release.
@@ -121,7 +210,7 @@ non-overlapping trigger and cache policy.
 - Upstream: the latest build-protected `pret/pokeemerald` default-branch commit, resolved and frozen per build.
 - Save files from vanilla Emerald are unsupported. Begin with a fresh save.
 - Link, Battle Frontier, e-Reader, Trainer Hill, and Secret Base party generation retain their upstream implementations.
-- Version `v0.1.0` is the initial scaffolding release and should be play-tested on both mGBA and real hardware before being treated as tournament-stable.
+- Version `v0.2.0` adds cross-platform build support, safer species and follower handling, balanced strategy-aware movesets, and automated CodeQL issue tracking. It should be play-tested on both mGBA and real hardware before being treated as tournament-stable.
 
 ## Project policy
 
