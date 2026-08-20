@@ -1,0 +1,98 @@
+diff --git a/tools/gbagfx/convert_png.c b/tools/gbagfx/convert_png.c
+index 58371229c06d0c036a23d55ffcbf5761d0089800..bb0dd1a4c2ea4b6462624034c3c0755e24b47caa 100644
+--- a/tools/gbagfx/convert_png.c
++++ b/tools/gbagfx/convert_png.c
+@@ -97,14 +97,16 @@ void ReadPng(char *path, struct Image *image)
+     image->width = png_get_image_width(png_ptr, info_ptr);
+     image->height = png_get_image_height(png_ptr, info_ptr);
+ 
+-    int rowbytes = png_get_rowbytes(png_ptr, info_ptr);
++    png_size_t rowbytes = png_get_rowbytes(png_ptr, info_ptr);
+ 
+-    image->pixels = malloc(image->height * rowbytes);
++    // Keep the product in size_t so a large PNG cannot wrap signed-int
++    // arithmetic into an undersized destination buffer.
++    image->pixels = malloc((size_t)image->height * rowbytes);
+ 
+     if (image->pixels == NULL)
+         FATAL_ERROR("Failed to allocate pixel buffer.\n");
+ 
+-    png_bytepp row_pointers = malloc(image->height * sizeof(png_bytep));
++    png_bytepp row_pointers = malloc((size_t)image->height * sizeof(png_bytep));
+ 
+     if (row_pointers == NULL)
+         FATAL_ERROR("Failed to allocate row pointers.\n");
+diff --git a/tools/gbagfx/gfx.c b/tools/gbagfx/gfx.c
+index 1dfc38e2d0362cb8224f67f057f68ee7120dce9f..70c8c4c8961cd30a010621340ded1abefdff879d 100644
+--- a/tools/gbagfx/gfx.c
++++ b/tools/gbagfx/gfx.c
+@@ -386,7 +386,9 @@ void ReadTileImage(char *path, int tilesWidth, int metatileWidth, int metatileHe
+ 
+ 	image->width = tilesWidth * 8;
+ 	image->height = tilesHeight * 8;
+-	image->pixels = calloc(tilesWidth * tilesHeight, tileSize);
++	// Promote dimensions before multiplication so the allocation size cannot
++	// overflow the narrower signed-int arithmetic used by image dimensions.
++	image->pixels = calloc((size_t)tilesWidth * (size_t)tilesHeight, (size_t)tileSize);
+ 
+ 	if (image->pixels == NULL)
+ 		FATAL_ERROR("Failed to allocate memory for pixels.\n");
+diff --git a/tools/mid2agb/agb.cpp b/tools/mid2agb/agb.cpp
+index 1db758d1bde6c47412c1ece829b2e0b4ae88a599..725633fcfa8c0c6a29e3f2b3a1ff0710513c4a63 100644
+--- a/tools/mid2agb/agb.cpp
++++ b/tools/mid2agb/agb.cpp
+@@ -495,7 +495,14 @@ void PrintAgbTrack(std::vector<Event>& events)
+             break;
+         case EventType::Pattern:
+             PrintByte("PATT");
+-            PrintWord("%s_%u_%03lu", g_asmLabel.c_str(), g_agbTrack, event.param2);
++            // Pattern identifiers are emitted as unsigned labels; match the
++            // variadic argument type to the %lu conversion exactly.
++            PrintWord(
++                "%s_%u_%03lu",
++                g_asmLabel.c_str(),
++                g_agbTrack,
++                static_cast<unsigned long>(event.param2)
++            );
+ 
+             while (!IsPatternBoundary(events[i + 1].type))
+                 i++;
+diff --git a/tools/rsfont/convert_png.c b/tools/rsfont/convert_png.c
+index f6a30804a95a4e4ace868b387142ae62251c2bc8..a56a6ea61111cc7789f03ed955281082b6408af5 100644
+--- a/tools/rsfont/convert_png.c
++++ b/tools/rsfont/convert_png.c
+@@ -56,14 +56,16 @@ void ReadPng(char *path, struct Image *image)
+ 	image->width = png_get_image_width(png_ptr, info_ptr);
+ 	image->height = png_get_image_height(png_ptr, info_ptr);
+ 
+-	int rowbytes = png_get_rowbytes(png_ptr, info_ptr);
++	png_size_t rowbytes = png_get_rowbytes(png_ptr, info_ptr);
+ 
+-	image->pixels = malloc(image->height * rowbytes);
++	// Keep the product in size_t so a large PNG cannot wrap signed-int
++	// arithmetic into an undersized destination buffer.
++	image->pixels = malloc((size_t)image->height * rowbytes);
+ 
+ 	if (image->pixels == NULL)
+ 		FATAL_ERROR("Failed to allocate pixel buffer.\n");
+ 
+-	png_bytepp row_pointers = malloc(image->height * sizeof(png_bytep));
++	png_bytepp row_pointers = malloc((size_t)image->height * sizeof(png_bytep));
+ 
+ 	if (row_pointers == NULL)
+ 		FATAL_ERROR("Failed to allocate row pointers.\n");
+diff --git a/tools/rsfont/font.c b/tools/rsfont/font.c
+index ed48b31e6f8512e999fa40997e855c23838fad96..818e739f254e14602764ac990425034d87039cab 100644
+--- a/tools/rsfont/font.c
++++ b/tools/rsfont/font.c
+@@ -410,7 +410,9 @@ void ReadFont(char *path, struct Image *image, int numGlyphs, int bpp, int layou
+     image->width = 128;
+     image->height = numRows * rowHeight;
+     image->bitDepth = 8;
+-    image->pixels = calloc(image->width * image->height, 1);
++    // Promote both dimensions before multiplication to avoid allocating an
++    // undersized buffer after signed-int overflow.
++    image->pixels = calloc((size_t)image->width * (size_t)image->height, 1);
+ 
+     if (image->pixels == NULL)
+         FATAL_ERROR("Failed to allocate memory for font.\n");

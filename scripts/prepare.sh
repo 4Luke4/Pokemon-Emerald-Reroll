@@ -6,12 +6,15 @@ repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 upstream_url="${UPSTREAM_URL:-https://github.com/pret/pokeemerald.git}"
 resolved_commit="$("${repository_root}/scripts/resolve-upstream.sh")"
 worktree="${REROLL_WORKTREE:-${repository_root}/build/pokeemerald}"
-patch_directory="${repository_root}/patches/integration"
+upstream_patch_directory="${repository_root}/patches/upstream"
+integration_patch_directory="${repository_root}/patches/integration"
 overlay_directory="${repository_root}/overlay"
 manifest="${worktree}.reroll-prepared"
 
-if [[ ! -d "${patch_directory}" || ! -d "${overlay_directory}" ]]; then
-    printf 'error: missing integration patches or source overlay\n' >&2
+if [[ ! -d "${upstream_patch_directory}"
+   || ! -d "${integration_patch_directory}"
+   || ! -d "${overlay_directory}" ]]; then
+    printf 'error: missing upstream patches, integration patches, or source overlay\n' >&2
     exit 1
 fi
 
@@ -19,7 +22,7 @@ fi
 # bundled sort and checksum utilities expose different command-line options.
 fingerprint="$(
     cd "${repository_root}"
-    python3 scripts/fingerprint.py patches/integration overlay
+    python3 scripts/fingerprint.py patches overlay
 )"
 expected_manifest="${resolved_commit} ${fingerprint}"
 
@@ -50,7 +53,11 @@ if [[ "${actual_commit}" != "${resolved_commit}" ]]; then
     exit 1
 fi
 
-for patch_file in "${patch_directory}"/*.patch; do
+# Apply isolated upstream hardening before gameplay integration so a failing
+# hunk identifies the ownership boundary that needs maintenance.
+for patch_file in \
+    "${upstream_patch_directory}"/*.patch \
+    "${integration_patch_directory}"/*.patch; do
     git -C "${worktree}" apply --check "${patch_file}"
     git -C "${worktree}" apply --whitespace=error-all "${patch_file}"
 done

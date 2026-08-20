@@ -35,6 +35,11 @@ python3 scripts/verify-source.py
 Review every file under `patches/integration/` before committing. New files,
 substantial logic, and binary changes do not belong in those patches.
 
+Corrections to unmodified upstream host tools belong in a narrowly scoped patch
+under `patches/upstream/`. Keep them separate from gameplay hooks, document why
+Reroll must carry them, include explanatory comments for non-obvious safety
+invariants, and remove them after an equivalent upstream correction lands.
+
 ## Design requirements
 
 - Preserve story flags, scripts, maps, and vanilla encounter sequencing unless an approved issue explicitly changes them.

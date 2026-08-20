@@ -34,8 +34,8 @@ badges link directly to the matching GitHub Releases view.
 
 The normal build, upstream compatibility, and release workflows share the local
 `setup-build` action. Its cache uses an exact key composed from the runner OS and
-architecture, compiler versions, immutable upstream SHA, overlay and integration
-source, and build/verification scripts. It has no prefix fallback, so an object
+architecture, compiler versions, immutable upstream SHA, overlay, both patch
+layers, and build/verification scripts. It has no prefix fallback, so an object
 built by another compiler or for another source revision is never reused.
 Final ROM, ELF, map, and save outputs are excluded from cache storage; a cache
 hit still performs the final link and ROM validation.

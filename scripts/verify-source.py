@@ -12,6 +12,7 @@ import sys
 REPOSITORY_ROOT = pathlib.Path(__file__).resolve().parents[1]
 OVERLAY_ROOT = REPOSITORY_ROOT / "overlay"
 PATCH_ROOT = REPOSITORY_ROOT / "patches" / "integration"
+UPSTREAM_PATCH_ROOT = REPOSITORY_ROOT / "patches" / "upstream"
 
 REQUIRED_MARKERS = {
     "src/reroll/rng.c": (
@@ -77,6 +78,29 @@ def main() -> None:
         if len(patch.splitlines()) > 250:
             fail(f"integration patch is too large to audit: {patch_path.name}")
 
+    upstream_patches = sorted(UPSTREAM_PATCH_ROOT.glob("*.patch"))
+    if not upstream_patches:
+        fail("expected at least one isolated upstream hardening patch")
+    expected_upstream_markers = {
+        "tools/gbagfx/gfx.c",
+        "tools/gbagfx/convert_png.c",
+        "tools/rsfont/convert_png.c",
+        "tools/rsfont/font.c",
+        "tools/mid2agb/agb.cpp",
+        "static_cast<unsigned long>(event.param2)",
+    }
+    upstream_patch_text = "\n".join(
+        patch.read_text(encoding="utf-8") for patch in upstream_patches
+    )
+    missing_upstream_markers = sorted(
+        marker for marker in expected_upstream_markers if marker not in upstream_patch_text
+    )
+    if missing_upstream_markers:
+        fail(
+            "upstream hardening is missing CodeQL corrections: "
+            + ", ".join(missing_upstream_markers)
+        )
+
     if (REPOSITORY_ROOT / "patches" / "reroll.patch").exists():
         fail("legacy monolithic patch is still present")
 
@@ -85,6 +109,8 @@ def main() -> None:
         fail("prepare.sh must dynamically resolve upstream without a fixed commit")
     if "scripts/fingerprint.py" not in prepare:
         fail("prepare.sh must use the cross-platform build-input fingerprint")
+    if "patches/upstream" not in prepare or "scripts/fingerprint.py patches overlay" not in prepare:
+        fail("prepare.sh must apply and fingerprint isolated upstream patches")
 
     version = (REPOSITORY_ROOT / "VERSION").read_text(encoding="utf-8").strip()
     if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
