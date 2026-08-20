@@ -8,7 +8,7 @@
 [![GitHub release](https://img.shields.io/github/v/release/4Luke4/Pokemon-Emerald-Reroll?include_prereleases)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/releases)
 [![Total release downloads](https://img.shields.io/github/downloads/4Luke4/Pokemon-Emerald-Reroll/total?label=downloads)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/releases)
 [![Latest release downloads](https://img.shields.io/github/downloads/4Luke4/Pokemon-Emerald-Reroll/latest/total?label=latest%20downloads)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/releases/latest)
-[![Version](https://img.shields.io/badge/version-v0.2.0-2ea44f)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v0.2.1-2ea44f)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-proprietary-red)](LICENSE.md)
 
 Pokémon Emerald: Reroll is a permadeath, progression-scaled challenge mode built as a source patch for the [`pret/pokeemerald`](https://github.com/pret/pokeemerald) decompilation. The original story, maps, battles, and core Generation III mechanics remain in place; roster construction, progression, item access, and selected quality-of-life systems are changed deliberately.
@@ -161,7 +161,7 @@ cd Pokemon-Emerald-Reroll
 
 ### Build output and verification
 
-The local result is `dist/pokemon-emerald-reroll-v0.2.0.gba`. It is intentionally
+The local result is `dist/pokemon-emerald-reroll-v0.2.1.gba`. It is intentionally
 ignored by Git. Push, pull-request, scheduled, and ordinary manually dispatched
 checks retain only its checksum and exact upstream SHA; only the protected,
 manual release workflow can attach a verified ROM to a GitHub release.
@@ -183,6 +183,8 @@ python3 scripts/verify-source.py
 - `overlay/src/reroll/` contains standalone, commented C modules for each feature.
 - `overlay/include/reroll/` contains the public and internal module interfaces.
 - `patches/integration/` contains only small, topic-specific hooks into upstream.
+- `patches/upstream/` contains isolated upstream host-tool hardening carried by
+  Reroll until equivalent corrections land in `pret/pokeemerald`.
 - `scripts/resolve-upstream.sh` resolves one immutable upstream SHA per build.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the modular development workflow and
@@ -210,7 +212,10 @@ non-overlapping trigger and cache policy.
 - Upstream: the latest build-protected `pret/pokeemerald` default-branch commit, resolved and frozen per build.
 - Save files from vanilla Emerald are unsupported. Begin with a fresh save.
 - Link, Battle Frontier, e-Reader, Trainer Hill, and Secret Base party generation retain their upstream implementations.
-- Version `v0.2.0` adds cross-platform build support, safer species and follower handling, balanced strategy-aware movesets, and automated CodeQL issue tracking. It should be play-tested on both mGBA and real hardware before being treated as tournament-stable.
+- Version `v0.2.1` hardens upstream host-tool allocation and format handling,
+  preserves least-privilege lint automation, and isolates upstream corrections
+  from Reroll gameplay hooks. It should be play-tested on both mGBA and real
+  hardware before being treated as tournament-stable.
 
 ## Project policy
 

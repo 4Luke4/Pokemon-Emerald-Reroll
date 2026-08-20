@@ -47,7 +47,7 @@ runs:
       run: |
         fingerprint="$(python3 scripts/fingerprint.py \
           overlay \
-          patches/integration \
+          patches \
           scripts/prepare.sh \
           scripts/build-rom.sh \
           scripts/fingerprint.py \

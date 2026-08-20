@@ -18,7 +18,9 @@ service. Ordinary CI does not publish ROM artifacts; the manually dispatched,
 maintainer-authorized release workflow is the sole publication path. Security
 review covers:
 
-- standalone feature code under `overlay/` and topic-specific hooks under `patches/integration/`;
+- standalone feature code under `overlay/`, topic-specific hooks under
+  `patches/integration/`, and explicitly carried hardening under
+  `patches/upstream/`;
 - local preparation, build, and verification scripts;
 - GitHub Actions, Dependabot, issue forms, and release automation; and
 - parsing or state transitions that can corrupt memory, escape intended save boundaries, or execute untrusted code during a build.
@@ -89,6 +91,10 @@ publish externally discovered or embargoed vulnerability details.
   Protection requires its build check; Reroll resolves it once per job, records
   the immutable SHA, and runs weekly compatibility builds so breakage fails
   visibly without publishing a ROM.
+- Narrow corrections that Reroll must carry for upstream host tools are isolated
+  under `patches/upstream/`, applied before gameplay integration, and included
+  in exact preparation and cache fingerprints. Equivalent upstream fixes remove
+  the local patch rather than creating a permanent fork.
 - Prepared build caches use exact keys covering the upstream SHA, feature
   sources, integration hooks, build verification scripts, runner architecture,
   and compiler versions. There are no fallback keys. CodeQL builds are uncached

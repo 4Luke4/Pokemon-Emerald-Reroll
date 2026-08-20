@@ -14,6 +14,7 @@ build:
           - "scripts/update-patches.sh"
           - "scripts/verify-rom.py"
           - "scripts/verify-source.py"
+          - "patches/upstream/**"
           - "VERSION"
 
 ci:
@@ -42,3 +43,4 @@ security:
           - ".github/workflows/codeql-issue.yml"
           - ".github/scripts/sync-codeql-issue.py"
           - ".github/workflows/release.yml"
+          - "patches/upstream/**"
