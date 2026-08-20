@@ -8,19 +8,47 @@ on:
   schedule:
     - cron: "41 3 8 * *"
 
-permissions:
-  contents: read
-  security-events: write
+# Every analysis job declares its own minimum token scope.
+permissions: {}
 
 concurrency:
   group: codeql-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  # GitHub Actions uses a separate CodeQL database from C/C++. Keeping this job
+  # ensures workflow alerts are reevaluated instead of remaining stale forever.
+  analyze-actions:
+    name: Analyze workflows
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Check out Reroll
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: actions
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:actions
+
   analyze:
     name: Analyze C/C++
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: read
+      security-events: write
 
     steps:
       - name: Check out Reroll

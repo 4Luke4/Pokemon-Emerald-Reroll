@@ -112,6 +112,38 @@ def main() -> None:
     if "patches/upstream" not in prepare or "scripts/fingerprint.py patches overlay" not in prepare:
         fail("prepare.sh must apply and fingerprint isolated upstream patches")
 
+    super_linter = (
+        REPOSITORY_ROOT / ".github" / "workflows" / "super-linter.yml"
+    ).read_text(encoding="utf-8")
+    super_linter_fragments = (
+        "permissions: {}\n",
+        "    permissions:\n"
+        "      contents: read\n"
+        "      packages: read\n"
+        "      # Super-Linter publishes the lint result as a GitHub commit status.\n"
+        "      statuses: write\n",
+    )
+    if missing_permissions := [
+        fragment for fragment in super_linter_fragments if fragment not in super_linter
+    ]:
+        fail(f"Super-Linter is missing {len(missing_permissions)} permission block(s)")
+
+    codeql = (REPOSITORY_ROOT / ".github" / "workflows" / "codeql.yml").read_text(
+        encoding="utf-8"
+    )
+    actions_analysis_markers = (
+        "analyze-actions:",
+        "languages: actions",
+        "category: /language:actions",
+    )
+    if missing_actions_analysis := [
+        marker for marker in actions_analysis_markers if marker not in codeql
+    ]:
+        fail(
+            "CodeQL is missing GitHub Actions analysis markers: "
+            + ", ".join(missing_actions_analysis)
+        )
+
     version = (REPOSITORY_ROOT / "VERSION").read_text(encoding="utf-8").strip()
     if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
         fail("VERSION must contain one stable semantic version")
