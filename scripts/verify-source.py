@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import pathlib
+import re
 import subprocess
 import sys
 
@@ -19,6 +20,8 @@ REQUIRED_MARKERS = {
     ),
     "src/reroll/pokemon.c": (
         "if (level > 50 && !IsFinalEvolution(species))",
+        "SPECIES_OLD_UNOWN_B",
+        "ChooseWeightedMove",
         "CanSpeciesLearnTMHM",
         "AddEggMoves",
     ),
@@ -37,7 +40,11 @@ REQUIRED_MARKERS = {
         "Reroll_CanStoreItem",
     ),
     "src/reroll/hms.c": ("Reroll_FindVirtualHmUser",),
-    "src/reroll/follower.c": ("FollowerSpriteCallback",),
+    "src/reroll/follower.c": (
+        "FollowerSpriteCallback",
+        "FindFirstConsciousPartyMon",
+        "coordOffsetEnabled",
+    ),
     "src/reroll/permadeath.c": ("ClearSaveData();",),
 }
 
@@ -76,6 +83,21 @@ def main() -> None:
     prepare = (REPOSITORY_ROOT / "scripts" / "prepare.sh").read_text(encoding="utf-8")
     if "resolve-upstream.sh" not in prepare or "UPSTREAM_COMMIT=" in prepare:
         fail("prepare.sh must dynamically resolve upstream without a fixed commit")
+    if "scripts/fingerprint.py" not in prepare:
+        fail("prepare.sh must use the cross-platform build-input fingerprint")
+
+    version = (REPOSITORY_ROOT / "VERSION").read_text(encoding="utf-8").strip()
+    if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
+        fail("VERSION must contain one stable semantic version")
+    version_markers = {
+        "README.md": (f"version-v{version}", f"pokemon-emerald-reroll-v{version}.gba"),
+        "CHANGELOG.md": (f"## [{version}]",),
+        "SECURITY.md": (f"`{version.rsplit('.', 1)[0]}.x`",),
+    }
+    for relative_path, markers in version_markers.items():
+        contents = (REPOSITORY_ROOT / relative_path).read_text(encoding="utf-8")
+        if missing_markers := [marker for marker in markers if marker not in contents]:
+            fail(f"{relative_path} is missing version markers: {', '.join(missing_markers)}")
 
     tracked_paths = subprocess.run(
         ["git", "-C", str(REPOSITORY_ROOT), "ls-files", "-z"],

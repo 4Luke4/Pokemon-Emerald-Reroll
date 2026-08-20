@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-repository_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 upstream_url="${UPSTREAM_URL:-https://github.com/pret/pokeemerald.git}"
 resolved_commit="$("${repository_root}/scripts/resolve-upstream.sh")"
 worktree="${REROLL_WORKTREE:-${repository_root}/build/pokeemerald}"
@@ -15,11 +15,12 @@ if [[ ! -d "${patch_directory}" || ! -d "${overlay_directory}" ]]; then
     exit 1
 fi
 
-fingerprint="$(find "${patch_directory}" "${overlay_directory}" -type f -print0 \
-    | sort -z \
-    | xargs -0 sha256sum \
-    | sha256sum \
-    | awk '{print $1}')"
+# Python keeps the input fingerprint identical on GNU/Linux and macOS, whose
+# bundled sort and checksum utilities expose different command-line options.
+fingerprint="$(
+    cd "${repository_root}"
+    python3 scripts/fingerprint.py patches/integration overlay
+)"
 expected_manifest="${resolved_commit} ${fingerprint}"
 
 if [[ -d "${worktree}/.git"
@@ -31,7 +32,7 @@ if [[ -d "${worktree}/.git"
 fi
 
 if [[ ! -d "${worktree}/.git" ]]; then
-    mkdir -p -- "$(dirname -- "${worktree}")"
+    mkdir -p "$(dirname "${worktree}")"
     git clone --filter=blob:none --no-checkout "${upstream_url}" "${worktree}"
 else
     if [[ -n "$(git -C "${worktree}" status --short)" ]]; then
@@ -54,8 +55,8 @@ for patch_file in "${patch_directory}"/*.patch; do
     git -C "${worktree}" apply --whitespace=error-all "${patch_file}"
 done
 
-mkdir -p -- "${worktree}/include/reroll" "${worktree}/src/reroll"
-cp -R -- "${overlay_directory}/include/." "${worktree}/include/"
-cp -R -- "${overlay_directory}/src/." "${worktree}/src/"
+mkdir -p "${worktree}/include/reroll" "${worktree}/src/reroll"
+cp -R "${overlay_directory}/include/." "${worktree}/include/"
+cp -R "${overlay_directory}/src/." "${worktree}/src/"
 printf '%s\n' "${expected_manifest}" > "${manifest}"
 printf 'Prepared Reroll source at %s (%s)\n' "${worktree}" "${resolved_commit}"

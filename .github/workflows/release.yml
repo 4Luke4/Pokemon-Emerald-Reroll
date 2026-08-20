@@ -77,6 +77,14 @@ jobs:
               ;;
           esac
 
+          repository_version="$(<VERSION)"
+          requested_version="${TAG_NAME#v}"
+          requested_base_version="${requested_version%%-*}"
+          if [[ "${requested_base_version}" != "${repository_version}" ]]; then
+            echo "error: ${TAG_NAME} does not match repository version ${repository_version}" >&2
+            exit 1
+          fi
+
           if gh release view "${TAG_NAME}" >/dev/null 2>&1; then
             echo "error: GitHub release ${TAG_NAME} already exists" >&2
             exit 1

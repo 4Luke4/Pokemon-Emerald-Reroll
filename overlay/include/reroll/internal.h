@@ -10,6 +10,7 @@ void RerollRandom_Init(void);
 u32 RerollRandom_Range(u32 upperBound);
 
 // Legal Pokémon construction primitives shared by player and trainer parties.
+bool8 RerollPokemon_IsEligibleSpecies(u16 species, u8 level);
 u16 RerollPokemon_ChooseSpecies(u8 level, const u16 *excludedSpecies, u8 excludedCount);
 void RerollPokemon_BuildMoveset(struct Pokemon *mon, u16 species, u8 level);
 void RerollPokemon_ChooseAbility(struct Pokemon *mon, u16 species);

@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-repository_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 worktree="${REROLL_WORKTREE:-${repository_root}/build/pokeemerald}"
 patch_directory="${repository_root}/patches/integration"
 
@@ -11,7 +11,7 @@ if [[ ! -d "${worktree}/.git" ]]; then
     exit 1
 fi
 
-mkdir -p -- "${patch_directory}"
+mkdir -p "${patch_directory}"
 
 # Each patch contains only the minimal hooks for one review domain. New feature
 # logic belongs in overlay/src/reroll, never in these generated patch files.

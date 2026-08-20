@@ -7,8 +7,8 @@ Security fixes are provided for the current minor release and the `main` branch.
 | Version | Supported |
 | --- | --- |
 | `main` | Yes |
-| `0.1.x` | Yes |
-| `< 0.1.0` | No |
+| `0.2.x` | Yes |
+| `< 0.2.0` | No |
 
 ## System and Scope
 
@@ -36,6 +36,9 @@ The primary assets are repository integrity, workflow credentials, maintainer ac
 - Preparation must resolve one complete upstream SHA from the protected default branch, freeze it for the job, check out exactly that commit, and record it for reproduction; a mismatched or dirty worktree fails closed.
 - Every integration patch must pass `git apply --check` before mutation. Patch and overlay installation must remain inside the selected generated worktree.
 - Pull-request workflows that execute contributor code have read-only repository permissions.
+- CodeQL issue synchronization may write only the repository-owned tracker after
+  a successful default-branch analysis; it must never treat a failed or cancelled
+  analysis as a clean result.
 - `pull_request_target` workflows must never check out, source, or execute the pull request's head revision. Dependabot auto-merge is restricted to the verified `dependabot[bot]` actor and patch/minor updates, with required checks enforced by GitHub auto-merge.
 - Push, pull-request, scheduled, and non-release manual workflow artifacts must
   not contain ROMs, saves, tokens, credentials, or personal data. They may
@@ -73,6 +76,10 @@ The following are not security findings by themselves:
 - requests for ROMs, copyrighted assets, legal advice, or license exceptions.
 
 Do not use these exclusions to suppress a finding that crosses a listed trust boundary or violates a security invariant.
+
+The public CodeQL tracker is generated exclusively from repository-owned scans.
+It does not replace private vulnerability reporting and must not be used to
+publish externally discovered or embargoed vulnerability details.
 
 ## Known Limitations and Compensating Controls
 

@@ -39,7 +39,8 @@ substantial logic, and binary changes do not belong in those patches.
 
 - Preserve story flags, scripts, maps, and vanilla encounter sequencing unless an approved issue explicitly changes them.
 - Keep normal story-trainer levels equal to their vanilla slots. Six-member expansion slots use the trainer's vanilla average.
-- Generate moves only from legal level-up, compatible TM/HM, or egg-move sources.
+- Generate moves only from legal level-up, compatible TM/HM, or egg-move sources;
+  preserve the reliable STAB anchor and weighted strategy/support selection.
 - Keep species filtering consistent at the level-50 boundary.
 - Keep player Pokémon shiny, level-locked, and exactly six after every invariant check.
 - Do not weaken save erasure on defeat or re-enable Shift prompts and Poké Balls.

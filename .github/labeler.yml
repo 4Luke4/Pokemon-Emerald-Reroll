@@ -8,11 +8,13 @@ build:
   - changed-files:
       - any-glob-to-any-file:
           - "scripts/build-rom.sh"
+          - "scripts/fingerprint.py"
           - "scripts/prepare.sh"
           - "scripts/resolve-upstream.sh"
           - "scripts/update-patches.sh"
           - "scripts/verify-rom.py"
           - "scripts/verify-source.py"
+          - "VERSION"
 
 ci:
   - changed-files:
@@ -37,4 +39,6 @@ security:
       - any-glob-to-any-file:
           - "SECURITY.md"
           - ".github/workflows/codeql.yml"
+          - ".github/workflows/codeql-issue.yml"
+          - ".github/scripts/sync-codeql-issue.py"
           - ".github/workflows/release.yml"
