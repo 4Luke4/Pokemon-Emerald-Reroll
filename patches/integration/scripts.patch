@@ -116,7 +116,7 @@ diff --git a/data/specials.inc b/data/specials.inc
 index 34f27bfcfde2f283d3cbe8df4493196347238457..31ff3acebd9f50c335f97498471922f6c7ab7d9c 100644
 --- a/data/specials.inc
 +++ b/data/specials.inc
-@@ -540,3 +540,7 @@ gSpecials::
+@@ -540,3 +540,9 @@ gSpecials::
  	def_special RemoveRecordsWindow
  	def_special CloseDeptStoreElevatorWindow
  	def_special TrySetBattleTowerLinkType
@@ -124,3 +124,5 @@ index 34f27bfcfde2f283d3cbe8df4493196347238457..31ff3acebd9f50c335f97498471922f6
 +	def_special Reroll_ReplaceBallGift
 +	def_special Reroll_HasSpareRepel
 +	def_special Reroll_UseSpareRepel
++	def_special Reroll_ShowFollowerMessage
++	def_special Reroll_EndFollowerInteraction

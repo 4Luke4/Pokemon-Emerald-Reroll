@@ -62,8 +62,11 @@ for patch_file in \
     git -C "${worktree}" apply --whitespace=error-all "${patch_file}"
 done
 
-mkdir -p "${worktree}/include/reroll" "${worktree}/src/reroll"
+mkdir -p "${worktree}/include/reroll" "${worktree}/src/reroll" \
+    "${worktree}/graphics/reroll" "${worktree}/data/scripts"
 cp -R "${overlay_directory}/include/." "${worktree}/include/"
 cp -R "${overlay_directory}/src/." "${worktree}/src/"
+cp -R "${overlay_directory}/graphics/." "${worktree}/graphics/"
+cp -R "${overlay_directory}/data/." "${worktree}/data/"
 printf '%s\n' "${expected_manifest}" > "${manifest}"
 printf 'Prepared Reroll source at %s (%s)\n' "${worktree}" "${resolved_commit}"

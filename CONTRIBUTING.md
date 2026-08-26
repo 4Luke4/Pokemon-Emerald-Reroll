@@ -35,6 +35,20 @@ python3 scripts/verify-source.py
 Review every file under `patches/integration/` before committing. New files,
 substantial logic, and binary changes do not belong in those patches.
 
+Feature-owned graphics belong under `overlay/graphics/reroll/`, must be copied
+by `scripts/prepare.sh`, and require exact source/revision attribution in
+`THIRD_PARTY_NOTICES.md`. Keep species mappings auditable and extend
+`verify-source.py` whenever a complete asset set is an invariant. The follower
+set is reproducible from the resolved revision in
+`dependencies/merrp-followers.json` with
+`scripts/import-follower-assets.py <path-to-merrp>`.
+
+Do not edit follower sheets or their generated C table by hand. For a stable
+merrp release, pass its checked-out tag through `--source-ref`, `--release-tag`,
+and `--release-url`; the scheduled workflow performs this operation and opens a
+pull request. Review the manifest digest, removed files, source verification,
+and completed ROM build before merging.
+
 Corrections to unmodified upstream host tools belong in a narrowly scoped patch
 under `patches/upstream/`. Keep them separate from gameplay hooks, document why
 Reroll must carry them, include explanatory comments for non-obvious safety

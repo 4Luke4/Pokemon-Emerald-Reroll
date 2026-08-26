@@ -33,6 +33,10 @@ dependencies:
   - changed-files:
       - any-glob-to-any-file:
           - ".github/dependabot.yml"
+          - ".github/workflows/merrp-follower-update.yml"
+          - "dependencies/**"
+          - "scripts/check-merrp-release.py"
+          - "scripts/import-follower-assets.py"
           - "UPSTREAM.md"
 
 security:

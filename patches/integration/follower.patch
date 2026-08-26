@@ -1,0 +1,33 @@
+diff --git a/data/event_scripts.s b/data/event_scripts.s
+index 1ab33db83..c9e44cf44 100644
+--- a/data/event_scripts.s
++++ b/data/event_scripts.s
+@@ -589,6 +589,7 @@ Common_EventScript_LegendaryFlewAway::
+ 	.include "data/scripts/mauville_man.inc"
+ 	.include "data/scripts/field_move_scripts.inc"
+ 	.include "data/scripts/item_ball_scripts.inc"
++	.include "data/scripts/reroll_follower.inc"
+ 	.include "data/scripts/profile_man.inc"
+ 	.include "data/scripts/day_care.inc"
+ 	.include "data/scripts/flash.inc"
+diff --git a/src/field_control_avatar.c b/src/field_control_avatar.c
+index 699634a89..a0d96e56e 100644
+--- a/src/field_control_avatar.c
++++ b/src/field_control_avatar.c
+@@ -17,6 +17,7 @@
+ #include "pokemon.h"
+ #include "safari_zone.h"
+ #include "script.h"
++#include "reroll/reroll.h"
+ #include "secret_base.h"
+ #include "sound.h"
+ #include "start_menu.h"
+@@ -142,6 +143,8 @@ int ProcessPlayerFieldInput(struct FieldInput *input)
+     metatileBehavior = MapGridGetMetatileBehaviorAt(position.x, position.y);
+     if (input->pressedAButton && TryStartInteractionScript(&position, metatileBehavior, playerDirection) == TRUE)
+         return TRUE;
++    if (input->pressedAButton && Reroll_TryInteractWithFollower(position.x, position.y, position.elevation))
++        return TRUE;
+ 
+     if (input->heldDirection2 && input->dpadDirection == playerDirection)
+     {

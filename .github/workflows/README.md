@@ -12,6 +12,7 @@ artifact.
 | `super-linter.yml` | Push or pull request to `main`; manual | Lint changed source, scripts, documentation, and workflow definitions. |
 | `conventional-commits.yml` | Push to `main`; pull-request lifecycle | Validate Conventional Commit subjects. |
 | `upstream-compatibility.yml` | Weekly schedule; manual | Test the latest protected upstream revision independently of repository changes. |
+| `merrp-follower-update.yml` | Daily schedule; manual | Verify a new stable merrp release and open a review-required follower-asset pull request. |
 | `release.yml` | Manual only | Validate a version, create an annotated tag, and publish the verified ROM release. |
 | `dependabot-automerge.yml` | Dependabot pull-request lifecycle | Enable auto-merge only for eligible dependency updates. |
 | `label.yml` | Pull-request lifecycle | Apply path-based labels without executing pull-request code. |
@@ -42,6 +43,19 @@ hit still performs the final link and ROM validation.
 
 CodeQL intentionally bypasses this cache. Its compiler tracing must observe a
 clean instrumented build; restoring object files could reduce analysis coverage.
+
+## merrp follower updates
+
+The updater recognizes only GitHub's latest stable Release endpoint; drafts and
+pre-releases cannot enter the update path. The preparation job has read-only
+repository access while it imports, verifies, and ROM-builds the upstream
+assets. Only the subsequent publishing job receives `contents: write` and
+`pull-requests: write`, and it handles the already verified artifact without
+executing upstream code. Generated pull-request workflows require maintainer
+approval under GitHub's `GITHUB_TOKEN` event policy.
+
+Repository Actions settings must permit GitHub Actions to create pull requests;
+the workflow never approves or merges its own pull request.
 
 ## CodeQL issue synchronization
 
