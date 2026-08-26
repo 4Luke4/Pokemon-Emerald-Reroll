@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "repository": "PokemonSanFran/merrp",
+  "source": {
+    "kind": "bootstrap",
+    "resolved_commit": "88cfd9e2673e462bd1f0bee058c20443ccadda3b",
+    "release": null
+  },
+  "assets": {
+    "count": 413,
+    "format": "indexed PNG, 192x32, six 32x32 frames",
+    "sha256": "e41f272e34a2feb66229f7c1d6f1d9fec812e34bfb7f52740f2baba8c88c7c23"
+  }
+}

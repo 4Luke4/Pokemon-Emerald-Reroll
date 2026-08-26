@@ -12,7 +12,10 @@ lintable, and reviewable without decoding a generated patch.
 | `src/reroll/trainers.c` | Trainer rosters, levels, items, and AI tiers |
 | `src/reroll/items.c` | Ball exclusion, marts, pickups, and Repel chaining |
 | `src/reroll/hms.c` | Virtual field-move users |
-| `src/reroll/follower.c` | First-conscious-Pokémon overworld icon lifecycle and camera tracking |
+| `src/reroll/follower.c` | First-conscious-Pokémon HGSS follower lifecycle, path trail, animation, interaction dialogue, and emotes |
+| `src/reroll/follower_graphics.inc.c` | Species-indexed HGSS follower sheet declarations |
+| `data/scripts/reroll_follower.inc` | Lock-safe field-message lifecycle for follower interactions |
+| `graphics/reroll/followers/` | 32×32 six-frame Gen I–III overworld sheets and Unown forms |
 | `src/reroll/permadeath.c` | Save erasure and reset after defeat |
 
 `include/reroll/reroll.h` is the narrow public interface consumed by upstream

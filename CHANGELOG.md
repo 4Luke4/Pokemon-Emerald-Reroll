@@ -6,6 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-26
+
+### Added
+
+- Added credited, species-indexed 32×32 HGSS-style overworld sheets for every
+  valid Generation I–III species and all 28 Unown forms.
+- Added normal and shiny follower palette selection from Emerald's canonical
+  species palette tables.
+- Added A-button follower conversations driven by the lead Pokémon's current
+  status, HP, and friendship, with native heart, question, and exclamation
+  emotes.
+- Added a dependency manifest and a daily, manually dispatchable workflow that
+  detects merrp's latest stable GitHub Release, verifies and builds regenerated
+  assets in a read-only job, then opens a maintainer-reviewed update pull
+  request from a separately permissioned publishing job.
+
+### Changed
+
+- Replaced the party-menu icon follower with a six-frame directional
+  overworld sprite that walks the player's recorded route one tile behind.
+- Followers now withdraw during biking, surfing, underwater travel, and forced
+  movement, matching the relevant HeartGold/SoulSilver visibility behavior.
+- Reworked the merrp importer to resolve a supplied release tag or the manifest
+  lock instead of embedding a fixed source commit in executable code.
+
+### Fixed
+
+- Reinitialize follower path state after warps and sprite recreation so the
+  follower cannot cut across the screen or retain a stale Unown form.
+
 ## [0.2.2] - 2026-08-20
 
 ### Security
@@ -90,7 +120,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Reproducible build and ROM verification scripts.
 - CI, CodeQL, linting, Dependabot, issue forms, pull-request guidance, ownership rules, and repository policy documents.
 
-[Unreleased]: https://github.com/4Luke4/Pokemon-Emerald-Reroll/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/4Luke4/Pokemon-Emerald-Reroll/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/4Luke4/Pokemon-Emerald-Reroll/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/4Luke4/Pokemon-Emerald-Reroll/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/4Luke4/Pokemon-Emerald-Reroll/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/4Luke4/Pokemon-Emerald-Reroll/compare/v0.1.0...v0.2.0

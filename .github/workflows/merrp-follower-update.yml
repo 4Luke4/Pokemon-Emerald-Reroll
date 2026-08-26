@@ -1,0 +1,192 @@
+name: Update merrp follower assets
+
+on:
+  schedule:
+    - cron: "43 5 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: merrp-follower-update
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Verify latest stable release
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      contents: read
+    outputs:
+      available: ${{ steps.release.outputs.available }}
+      update_required: ${{ steps.release.outputs.update_required }}
+      release_id: ${{ steps.release.outputs.release_id }}
+      release_tag: ${{ steps.release.outputs.tag }}
+      release_url: ${{ steps.release.outputs.url }}
+
+    steps:
+      - name: Check out Reroll without write credentials
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Resolve latest stable merrp release
+        id: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          python3 scripts/check-merrp-release.py
+          --manifest dependencies/merrp-followers.json
+          --github-output "${GITHUB_OUTPUT}"
+
+      - name: Record no-release result
+        if: steps.release.outputs.available != 'true'
+        run: |
+          {
+            echo "## merrp follower assets"
+            echo
+            echo "No stable GitHub Release is currently published upstream."
+            echo "No repository changes were made."
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Record current-release result
+        if: >-
+          steps.release.outputs.available == 'true' &&
+          steps.release.outputs.update_required != 'true'
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          {
+            echo "## merrp follower assets"
+            echo
+            echo "The manifest already records stable release \`${RELEASE_TAG}\`."
+            echo "No repository changes were made."
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Fetch stable merrp source
+        if: steps.release.outputs.update_required == 'true'
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          source_directory="${RUNNER_TEMP}/merrp"
+          git clone --filter=blob:none --no-checkout \
+            https://github.com/PokemonSanFran/merrp.git "${source_directory}"
+          git -C "${source_directory}" fetch --depth=1 origin \
+            "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+          git -C "${source_directory}" checkout --detach "refs/tags/${RELEASE_TAG}"
+
+      - name: Import and verify follower assets
+        if: steps.release.outputs.update_required == 'true'
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_URL: ${{ steps.release.outputs.url }}
+        run: |
+          python3 scripts/import-follower-assets.py "${RUNNER_TEMP}/merrp" \
+            --source-ref "refs/tags/${RELEASE_TAG}" \
+            --release-tag "${RELEASE_TAG}" \
+            --release-url "${RELEASE_URL}"
+          python3 scripts/verify-source.py
+
+      - name: Set up cached ROM build
+        if: steps.release.outputs.update_required == 'true'
+        id: setup
+        uses: ./.github/actions/setup-build
+
+      - name: Build and validate updated assets
+        if: steps.release.outputs.update_required == 'true'
+        env:
+          UPSTREAM_REF: ${{ steps.setup.outputs.upstream-sha }}
+        run: |
+          ./scripts/build-rom.sh
+          find dist -type f -name '*.gba' -delete
+
+      - name: Upload verified update
+        if: steps.release.outputs.update_required == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: merrp-follower-update-${{ steps.release.outputs.release_id }}
+          path: |
+            dependencies/merrp-followers.json
+            overlay/graphics/reroll/followers
+            overlay/src/reroll/follower_graphics.inc.c
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: Open dependency pull request
+    needs: prepare
+    if: needs.prepare.outputs.update_required == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Check out Reroll with scoped write credentials
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Download verified update
+        uses: actions/download-artifact@v8
+        with:
+          name: merrp-follower-update-${{ needs.prepare.outputs.release_id }}
+          path: .
+
+      - name: Create dependency update commit
+        id: commit
+        env:
+          RELEASE_ID: ${{ needs.prepare.outputs.release_id }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+        run: |
+          branch="automation/merrp-followers-${RELEASE_ID}"
+          remote_sha=""
+          if git ls-remote --exit-code --heads origin "refs/heads/${branch}" \
+            > "${RUNNER_TEMP}/merrp-branch"; then
+            read -r remote_sha _ < "${RUNNER_TEMP}/merrp-branch"
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "${branch}"
+          git add dependencies/merrp-followers.json \
+            overlay/graphics/reroll/followers \
+            overlay/src/reroll/follower_graphics.inc.c
+          if git diff --cached --quiet; then
+            echo "error: manifest indicated an update, but import produced no changes" >&2
+            exit 1
+          fi
+          git commit -m "chore(deps): update merrp followers to ${RELEASE_TAG}"
+          git push \
+            --force-with-lease="refs/heads/${branch}:${remote_sha}" \
+            origin "HEAD:refs/heads/${branch}"
+          echo "branch=${branch}" >> "${GITHUB_OUTPUT}"
+
+      - name: Open or update pull request
+        env:
+          BRANCH: ${{ steps.commit.outputs.branch }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+          RELEASE_URL: ${{ needs.prepare.outputs.release_url }}
+        run: |
+          pull_request_url="$(gh pr list --state open --head "${BRANCH}" \
+            --json url --jq '.[0].url // empty')"
+          if [[ -z "${pull_request_url}" ]]; then
+            pull_request_body="$(printf '%s %s\n\n%s %s\n' \
+              "Updates the vendored follower sheets from merrp stable release" \
+              "[${RELEASE_TAG}](${RELEASE_URL})." \
+              "The read-only preparation job resolved the tag, regenerated and verified the asset set," \
+              "and completed a validated ROM build. Maintainer review is required before merge.")"
+            pull_request_url="$(gh pr create \
+              --base main \
+              --head "${BRANCH}" \
+              --title "chore(deps): update merrp followers to ${RELEASE_TAG}" \
+              --body "${pull_request_body}")"
+          fi
+          {
+            echo "## merrp follower assets"
+            echo
+            echo "Opened or updated: ${pull_request_url}"
+          } >> "${GITHUB_STEP_SUMMARY}"

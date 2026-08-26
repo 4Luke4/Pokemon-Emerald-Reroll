@@ -28,6 +28,11 @@ bool8 Reroll_HasVirtualSurfUser(void);
 
 // Overworld follower and irreversible run failure.
 void Reroll_UpdateFollower(void);
+bool8 Reroll_TryInteractWithFollower(s16 x, s16 y, u8 elevation);
+void Reroll_ShowFollowerMessage(void);
+void Reroll_EndFollowerInteraction(void);
 void Reroll_GameOver(void);
+
+extern const u8 EventScript_RerollFollowerInteraction[];
 
 #endif // GUARD_REROLL_REROLL_H

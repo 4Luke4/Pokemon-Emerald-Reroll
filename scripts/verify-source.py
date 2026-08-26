@@ -3,8 +3,11 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import pathlib
 import re
+import struct
 import subprocess
 import sys
 
@@ -43,8 +46,14 @@ REQUIRED_MARKERS = {
     "src/reroll/hms.c": ("Reroll_FindVirtualHmUser",),
     "src/reroll/follower.c": (
         "FollowerSpriteCallback",
+        "Reroll_TryInteractWithFollower",
+        "Reroll_ShowFollowerMessage",
+        "ShowFollowerEmote",
         "FindFirstConsciousPartyMon",
         "coordOffsetEnabled",
+        "GetFollowerTrailPosition",
+        "gMonShinyPaletteTable",
+        "follower_graphics.inc.c",
     ),
     "src/reroll/permadeath.c": ("ClearSaveData();",),
 }
@@ -69,8 +78,8 @@ def main() -> None:
         fail("modular source is missing invariants: " + ", ".join(missing))
 
     patches = sorted(PATCH_ROOT.glob("*.patch"))
-    if len(patches) < 5:
-        fail("expected at least five topic-specific integration patches")
+    if len(patches) < 6:
+        fail("expected at least six topic-specific integration patches")
     for patch_path in patches:
         patch = patch_path.read_text(encoding="utf-8")
         if "/dev/null" in patch:
@@ -104,6 +113,80 @@ def main() -> None:
     if (REPOSITORY_ROOT / "patches" / "reroll.patch").exists():
         fail("legacy monolithic patch is still present")
 
+    follower_graphics = OVERLAY_ROOT / "graphics" / "reroll" / "followers"
+    follower_assets = sorted(follower_graphics.glob("*.png"))
+    if len(follower_assets) != 413:
+        fail(f"expected 413 HGSS follower sheets, found {len(follower_assets)}")
+    invalid_sheets: list[str] = []
+    for asset in follower_assets:
+        header = asset.read_bytes()[:24]
+        if len(header) != 24 or header[:8] != b"\x89PNG\r\n\x1a\n":
+            invalid_sheets.append(f"{asset.name} (not PNG)")
+            continue
+        width, height = struct.unpack(">II", header[16:24])
+        if (width, height) != (192, 32):
+            invalid_sheets.append(f"{asset.name} ({width}x{height})")
+    if invalid_sheets:
+        fail("invalid six-frame follower sheets: " + ", ".join(invalid_sheets))
+    follower_table = OVERLAY_ROOT / "src" / "reroll" / "follower_graphics.inc.c"
+    if not follower_table.is_file():
+        fail("missing generated follower graphics table")
+    table_text = follower_table.read_text(encoding="utf-8")
+    missing_assets = [asset.name for asset in follower_assets if asset.name not in table_text]
+    if missing_assets:
+        fail("unmapped follower sheets: " + ", ".join(missing_assets))
+    if table_text.count("INCGFX_U32(") != 413:
+        fail("follower graphics table must declare exactly 413 sheets")
+
+    dependency_manifest_path = REPOSITORY_ROOT / "dependencies/merrp-followers.json"
+    try:
+        dependency_manifest = json.loads(
+            dependency_manifest_path.read_text(encoding="utf-8")
+        )
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        fail(f"invalid merrp dependency manifest: {error}")
+    if dependency_manifest.get("repository") != "PokemonSanFran/merrp":
+        fail("merrp dependency manifest identifies an unexpected repository")
+    source = dependency_manifest.get("source")
+    if not isinstance(source, dict) or not re.fullmatch(
+        r"[0-9a-f]{40}", str(source.get("resolved_commit", ""))
+    ):
+        fail("merrp dependency manifest must lock one resolved source commit")
+    assets = dependency_manifest.get("assets")
+    if not isinstance(assets, dict) or assets.get("count") != 413:
+        fail("merrp dependency manifest must record all 413 follower sheets")
+    asset_digest = hashlib.sha256()
+    for asset in follower_assets:
+        asset_digest.update(asset.name.encode("utf-8"))
+        asset_digest.update(b"\0")
+        asset_digest.update(asset.read_bytes())
+    if assets.get("sha256") != asset_digest.hexdigest():
+        fail("merrp follower asset digest does not match the dependency manifest")
+
+    importer = (REPOSITORY_ROOT / "scripts/import-follower-assets.py").read_text(
+        encoding="utf-8"
+    )
+    if "SOURCE_COMMIT" in importer or "--source-ref" not in importer:
+        fail("merrp importer must resolve its source from arguments or the manifest")
+    updater = (
+        REPOSITORY_ROOT / ".github/workflows/merrp-follower-update.yml"
+    ).read_text(encoding="utf-8")
+    updater_markers = (
+        "schedule:",
+        "permissions: {}",
+        "pull-requests: write",
+        "scripts/check-merrp-release.py",
+        "scripts/import-follower-assets.py",
+        "gh pr create",
+    )
+    if missing_updater_markers := [
+        marker for marker in updater_markers if marker not in updater
+    ]:
+        fail(
+            "merrp stable-release updater is incomplete: "
+            + ", ".join(missing_updater_markers)
+        )
+
     prepare = (REPOSITORY_ROOT / "scripts" / "prepare.sh").read_text(encoding="utf-8")
     if "resolve-upstream.sh" not in prepare or "UPSTREAM_COMMIT=" in prepare:
         fail("prepare.sh must dynamically resolve upstream without a fixed commit")
@@ -111,6 +194,10 @@ def main() -> None:
         fail("prepare.sh must use the cross-platform build-input fingerprint")
     if "patches/upstream" not in prepare or "scripts/fingerprint.py patches overlay" not in prepare:
         fail("prepare.sh must apply and fingerprint isolated upstream patches")
+    if '"${overlay_directory}/graphics/." "${worktree}/graphics/"' not in prepare:
+        fail("prepare.sh must copy follower graphics into the upstream worktree")
+    if '"${overlay_directory}/data/." "${worktree}/data/"' not in prepare:
+        fail("prepare.sh must copy follower interaction scripts into the worktree")
 
     super_linter = (
         REPOSITORY_ROOT / ".github" / "workflows" / "super-linter.yml"

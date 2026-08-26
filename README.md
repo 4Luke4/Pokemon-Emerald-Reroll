@@ -8,7 +8,7 @@
 [![GitHub release](https://img.shields.io/github/v/release/4Luke4/Pokemon-Emerald-Reroll?include_prereleases)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/releases)
 [![Total release downloads](https://img.shields.io/github/downloads/4Luke4/Pokemon-Emerald-Reroll/total?label=downloads)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/releases)
 [![Latest release downloads](https://img.shields.io/github/downloads/4Luke4/Pokemon-Emerald-Reroll/latest/total?label=latest%20downloads)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/releases/latest)
-[![Version](https://img.shields.io/badge/version-v0.2.2-2ea44f)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v0.3.0-2ea44f)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-proprietary-red)](LICENSE.md)
 
 Pokémon Emerald: Reroll is a permadeath, progression-scaled challenge mode built as a source patch for the [`pret/pokeemerald`](https://github.com/pret/pokeemerald) decompilation. The original story, maps, battles, and core Generation III mechanics remain in place; roster construction, progression, item access, and selected quality-of-life systems are changed deliberately.
@@ -40,7 +40,10 @@ Pokémon Emerald: Reroll is a permadeath, progression-scaled challenge mode buil
 - Repel expiration offers to consume another available Repel, preferring the longest duration.
 - Story field moves are virtual capabilities after their normal badge checks and do not consume move slots.
 - Interacting with Cut, Rock Smash, Strength, Surf, Waterfall, and Dive obstacles executes the action without a confirmation prompt.
-- The first conscious party member's animated icon follows the player in the overworld.
+- The first conscious party member appears as its directional HGSS-style
+  overworld sprite, follows the player's exact route one tile behind, and uses
+  the correct normal or shiny palette. Followers withdraw while biking,
+  surfing, underwater, or during forced movement.
 
 ## Randomness model
 
@@ -161,7 +164,7 @@ cd Pokemon-Emerald-Reroll
 
 ### Build output and verification
 
-The local result is `dist/pokemon-emerald-reroll-v0.2.2.gba`. It is intentionally
+The local result is `dist/pokemon-emerald-reroll-v0.3.0.gba`. It is intentionally
 ignored by Git. Push, pull-request, scheduled, and ordinary manually dispatched
 checks retain only its checksum and exact upstream SHA; only the protected,
 manual release workflow can attach a verified ROM to a GitHub release.
@@ -182,10 +185,24 @@ python3 scripts/verify-source.py
 
 - `overlay/src/reroll/` contains standalone, commented C modules for each feature.
 - `overlay/include/reroll/` contains the public and internal module interfaces.
+- `overlay/graphics/reroll/followers/` contains the credited 32×32 follower
+  sheets installed into the generated upstream worktree at preparation time.
+- `dependencies/merrp-followers.json` records reproducible follower provenance
+  and the complete asset-set digest without coupling the importer to one commit.
 - `patches/integration/` contains only small, topic-specific hooks into upstream.
 - `patches/upstream/` contains isolated upstream host-tool hardening carried by
   Reroll until equivalent corrections land in `pret/pokeemerald`.
 - `scripts/resolve-upstream.sh` resolves one immutable upstream SHA per build.
+
+Face the follower and press A to interact. Normal map interactions retain
+priority; when the follower is the target, its dialogue and native Pokémon
+emote reflect its actual status, HP, or friendship.
+
+The daily `Update merrp follower assets` workflow checks only merrp's latest
+non-draft, non-prerelease GitHub Release. It does nothing when no stable release
+exists or the manifest is current. A new release is imported, source-verified,
+and ROM-built without write credentials before a separate job opens or updates
+a review-required dependency pull request.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the modular development workflow and
 [UPSTREAM.md](UPSTREAM.md) for the upstream stability policy.
@@ -212,7 +229,7 @@ non-overlapping trigger and cache policy.
 - Upstream: the latest build-protected `pret/pokeemerald` default-branch commit, resolved and frozen per build.
 - Save files from vanilla Emerald are unsupported. Begin with a fresh save.
 - Link, Battle Frontier, e-Reader, Trainer Hill, and Secret Base party generation retain their upstream implementations.
-- Version `v0.2.2` enforces default-deny workflow tokens, assigns Super-Linter's
+- Version `v0.3.0` enforces default-deny workflow tokens, assigns Super-Linter's
   permissions only to its job, and continuously analyzes GitHub Actions alongside
   C/C++. It should be play-tested on both mGBA and real hardware before being
   treated as tournament-stable.
