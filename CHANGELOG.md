@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-27
+
+### Added
+
+- Added nature-based stat feedback to the Pokémon Skills page: boosted values
+  appear red, reduced values appear blue, and unaffected values remain neutral,
+  with modifiers read from Emerald's canonical nature table.
+
 ## [0.3.0] - 2026-08-26
 
 ### Added

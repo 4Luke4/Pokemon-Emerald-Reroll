@@ -5,6 +5,9 @@
 
 struct Pokemon;
 
+// Summary-screen feedback derived from Emerald's canonical nature table.
+const u8 *Reroll_GetNatureStatColor(u8 nature, u8 stat);
+
 // Party lifecycle and progression hooks.
 void Reroll_EnsurePlayerParty(void);
 void Reroll_OnBattleEnd(void);

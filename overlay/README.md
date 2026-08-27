@@ -13,6 +13,7 @@ lintable, and reviewable without decoding a generated patch.
 | `src/reroll/items.c` | Ball exclusion, marts, pickups, and Repel chaining |
 | `src/reroll/hms.c` | Virtual field-move users |
 | `src/reroll/follower.c` | First-conscious-Pokémon HGSS follower lifecycle, path trail, animation, interaction dialogue, and emotes |
+| `src/reroll/summary.c` | Canonical nature-based stat colors for the Pokémon Skills page |
 | `src/reroll/follower_graphics.inc.c` | Species-indexed HGSS follower sheet declarations |
 | `data/scripts/reroll_follower.inc` | Lock-safe field-message lifecycle for follower interactions |
 | `graphics/reroll/followers/` | 32×32 six-frame Gen I–III overworld sheets and Unown forms |
