@@ -10,6 +10,7 @@ decompilation and the standalone code under `overlay/`.
 | `hms.patch` | Virtual HM party lookup and Surf availability |
 | `items.patch` | Bag and mart capture-item exclusion |
 | `scripts.patch` | Pickup, Repel, HM prompt, and event-special hooks |
+| `summary.patch` | Nature-derived stat-value colors on the Pokémon Skills page |
 
 Each patch must pass `git apply --check`, contain no new source file, and remain
 below the audit-size threshold enforced by `scripts/verify-source.py`.

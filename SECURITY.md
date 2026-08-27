@@ -7,8 +7,8 @@ Security fixes are provided for the current minor release and the `main` branch.
 | Version | Supported |
 | --- | --- |
 | `main` | Yes |
-| `0.3.x` | Yes |
-| `< 0.3.0` | No |
+| `0.4.x` | Yes |
+| `< 0.4.0` | No |
 
 ## System and Scope
 

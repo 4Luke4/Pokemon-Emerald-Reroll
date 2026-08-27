@@ -8,7 +8,7 @@
 [![GitHub release](https://img.shields.io/github/v/release/4Luke4/Pokemon-Emerald-Reroll?include_prereleases)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/releases)
 [![Total release downloads](https://img.shields.io/github/downloads/4Luke4/Pokemon-Emerald-Reroll/total?label=downloads)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/releases)
 [![Latest release downloads](https://img.shields.io/github/downloads/4Luke4/Pokemon-Emerald-Reroll/latest/total?label=latest%20downloads)](https://github.com/4Luke4/Pokemon-Emerald-Reroll/releases/latest)
-[![Version](https://img.shields.io/badge/version-v0.3.0-2ea44f)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v0.4.0-2ea44f)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-proprietary-red)](LICENSE.md)
 
 Pokémon Emerald: Reroll is a permadeath, progression-scaled challenge mode built as a source patch for the [`pret/pokeemerald`](https://github.com/pret/pokeemerald) decompilation. The original story, maps, battles, and core Generation III mechanics remain in place; roster construction, progression, item access, and selected quality-of-life systems are changed deliberately.
@@ -37,6 +37,8 @@ Pokémon Emerald: Reroll is a permadeath, progression-scaled challenge mode buil
 ## Quality-of-life changes
 
 - Running is allowed indoors wherever the destination tile is safe.
+- Nature-boosted stat values appear red and nature-reduced values blue on the
+  Pokémon Skills page; unaffected stats retain their normal color.
 - Repel expiration offers to consume another available Repel, preferring the longest duration.
 - Story field moves are virtual capabilities after their normal badge checks and do not consume move slots.
 - Interacting with Cut, Rock Smash, Strength, Surf, Waterfall, and Dive obstacles executes the action without a confirmation prompt.
@@ -164,7 +166,7 @@ cd Pokemon-Emerald-Reroll
 
 ### Build output and verification
 
-The local result is `dist/pokemon-emerald-reroll-v0.3.0.gba`. It is intentionally
+The local result is `dist/pokemon-emerald-reroll-v0.4.0.gba`. It is intentionally
 ignored by Git. Push, pull-request, scheduled, and ordinary manually dispatched
 checks retain only its checksum and exact upstream SHA; only the protected,
 manual release workflow can attach a verified ROM to a GitHub release.

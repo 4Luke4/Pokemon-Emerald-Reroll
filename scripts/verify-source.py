@@ -56,6 +56,11 @@ REQUIRED_MARKERS = {
         "follower_graphics.inc.c",
     ),
     "src/reroll/permadeath.c": ("ClearSaveData();",),
+    "src/reroll/summary.c": (
+        "Reroll_GetNatureStatColor",
+        "gNatureStatTable[nature][stat - 1]",
+        "nature >= NUM_NATURES",
+    ),
 }
 
 
@@ -78,8 +83,8 @@ def main() -> None:
         fail("modular source is missing invariants: " + ", ".join(missing))
 
     patches = sorted(PATCH_ROOT.glob("*.patch"))
-    if len(patches) < 6:
-        fail("expected at least six topic-specific integration patches")
+    if len(patches) < 7:
+        fail("expected at least seven topic-specific integration patches")
     for patch_path in patches:
         patch = patch_path.read_text(encoding="utf-8")
         if "/dev/null" in patch:

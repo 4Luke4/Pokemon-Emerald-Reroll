@@ -113,7 +113,7 @@ index edb116f991edef3bd58ccc489b25fa44acb32425..d022b6aa2309331a254a67bc18b8498a
  	dofieldeffect FLDEFF_USE_SURF
  EventScript_ReleaseUseSurf::
 diff --git a/data/specials.inc b/data/specials.inc
-index 34f27bfcfde2f283d3cbe8df4493196347238457..31ff3acebd9f50c335f97498471922f6c7ab7d9c 100644
+index 34f27bfcfde2f283d3cbe8df4493196347238457..680674a7f65bcc57f9482f66e5f50021c29565a1 100644
 --- a/data/specials.inc
 +++ b/data/specials.inc
 @@ -540,3 +540,9 @@ gSpecials::

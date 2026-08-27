@@ -26,6 +26,8 @@ git -C "${worktree}" diff --full-index --no-ext-diff HEAD -- \
 git -C "${worktree}" diff --full-index --no-ext-diff HEAD -- \
     src/item.c src/shop.c > "${patch_directory}/items.patch"
 git -C "${worktree}" diff --full-index --no-ext-diff HEAD -- \
+    src/pokemon_summary_screen.c > "${patch_directory}/summary.patch"
+git -C "${worktree}" diff --full-index --no-ext-diff HEAD -- \
     asm/macros/event.inc data/scripts/field_move_scripts.inc \
     data/scripts/repel.inc data/scripts/surf.inc data/specials.inc \
     > "${patch_directory}/scripts.patch"
