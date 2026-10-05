@@ -34,7 +34,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Super-Linter
-        uses: super-linter/super-linter/slim@v8
+        uses: super-linter/super-linter/slim@v9
         env:
           DEFAULT_BRANCH: main
           FILTER_REGEX_EXCLUDE: ^patches/integration/.*\.patch$
